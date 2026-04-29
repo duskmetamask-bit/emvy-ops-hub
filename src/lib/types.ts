@@ -1,51 +1,75 @@
-export type PipelineStage = 'INBOUND' | 'PRE-CALL RESEARCH' | 'CALL' | 'AUDIT' | 'BUILD' | 'DONE';
-export type AgentName = 'callie' | 'atlas' | 'executioner';
-export type AgentStatusType = 'active' | 'idle' | 'stuck';
-export type WorkStatus = 'active' | 'blocked' | 'done';
-export type ProjectOwner = 'mew' | 'yuki' | 'claude-code';
+// EMVY Business Types
 
-export interface PipelineJob {
-  id: string;
-  client_name: string;
-  business_type: string;
-  stage: PipelineStage;
-  stage_entered_at: string;
-  agent_working: AgentName | null;
-  last_updated: string;
-  created_at: string;
-}
+export type LeadStage = 
+  | 'DISCOVERED' 
+  | 'ENRICHED' 
+  | 'SENT' 
+  | 'REPLY' 
+  | 'CALL' 
+  | 'AUDIT' 
+  | 'BUILD' 
+  | 'DONE';
 
-export interface AgentStatus {
-  id: string;
-  agent_name: AgentName;
-  last_heartbeat: string;
-  status: AgentStatusType;
-  current_job_id: string | null;
-}
+export type LeadTemp = 'HOT' | 'WARM' | 'DISCOVERED';
 
-export interface CurrentWork {
+export interface Lead {
   id: string;
-  project_name: string;
-  owner: ProjectOwner;
-  status: WorkStatus;
-  notes: string;
-  last_updated: string;
-}
-
-export interface KnowledgeBaseStats {
-  id: string;
-  agent_name: string;
-  category: string;
-  item_count: number;
+  name: string;
+  company: string;
+  industry: string;
+  location: string;
+  website?: string;
+  email?: string;
+  phone?: string;
+  stage: LeadStage;
+  score: number;
+  temp?: LeadTemp;
+  pain_evidence?: string;
+  notes?: string;
+  discovery_date: string;
+  last_contact?: string;
   last_updated: string;
 }
 
-export interface AlertHistory {
+export interface SeoChecklistItem {
   id: string;
-  alert_type: string;
-  message: string;
-  sent_at: string;
-  acknowledged: boolean;
+  task: string;
+  category: 'domain' | 'analytics' | 'content' | 'technical';
+  status: 'done' | 'todo' | 'blocked';
+  blocked_by?: string;
 }
 
-export type View = 'pipeline' | 'current-work' | 'knowledge' | 'actions';
+export interface ContentPillar {
+  id: string;
+  name: string;
+  topics: string[];
+  priority: 'high' | 'medium' | 'low';
+  status: 'planned' | 'in_progress' | 'published';
+}
+
+export interface InfrastructureItem {
+  id: string;
+  name: string;
+  category: 'domain' | 'website' | 'analytics' | 'crm' | 'outreach';
+  status: 'live' | 'in_progress' | 'needed' | 'blocked';
+  url?: string;
+  cost?: string;
+  notes?: string;
+}
+
+export interface Blocker {
+  id: string;
+  item: string;
+  type: 'domain' | 'api' | 'integration' | 'decision' | 'outreach';
+  status: 'waiting_on_dusk' | 'waiting_on_external' | 'in_progress';
+  notes?: string;
+}
+
+export interface PriorityAction {
+  id: string;
+  action: string;
+  reason: string;
+  priority: 'urgent' | 'high' | 'medium';
+  source: string;
+  due_date?: string;
+}

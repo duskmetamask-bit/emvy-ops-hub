@@ -1,324 +1,228 @@
 'use client';
 
-import { useState } from 'react';
-import { isSupabaseConfigured } from '@/lib/supabase';
-import type { AlertHistory } from '@/lib/types';
+import type { PriorityAction, Blocker } from '@/lib/types';
 
-type ActionState = 'idle' | 'loading' | 'success' | 'error';
+const ACTIONS: PriorityAction[] = [
+  // URGENT
+  {
+    id: 'a1',
+    action: 'Review Dicandilo Thomson (HOT lead) — search for pain evidence, draft outreach email',
+    reason: 'Top HOT lead — Matt Dicandilo, Chartered Accountant, Burswood. Score 7/10. Awaiting reply.',
+    priority: 'urgent',
+    source: 'vault/daily/2026-04-29.md',
+    due_date: '2026-04-30',
+  },
+  {
+    id: 'a2',
+    action: 'Review Aircon Express Perth + Alpha Co Plumbing (DISCOVERED 10/10)',
+    reason: 'Both 10/10 prospects — 38 years and est. 1999. Need review before staging.',
+    priority: 'urgent',
+    source: 'vault/daily/2026-04-29.md',
+    due_date: '2026-04-30',
+  },
+  // HIGH
+  {
+    id: 'a3',
+    action: 'Fix Lead Finder cron → write to Supabase instead of pipeline.json',
+    reason: 'Cron is disconnected from live Supabase dashboard. 24 leads are in leads table, cron writes elsewhere.',
+    priority: 'high',
+    source: 'vault/daily/2026-04-29.md',
+  },
+  {
+    id: 'a4',
+    action: 'Buy emvy.ai from Porkbun',
+    reason: 'Domain purchase is blocking: Search Console verification, site ownership proof, email setup, Carrd',
+    priority: 'high',
+    source: 'vault/emvy-content-seo-playbook.md',
+  },
+  {
+    id: 'a5',
+    action: 'Set up GA4 on emvyai.vercel.app',
+    reason: 'Need G-XXXXXXXXXX measurement ID. Required for SEO measurement.',
+    priority: 'high',
+    source: 'vault/emvy-content-seo-playbook.md',
+  },
+  // MEDIUM
+  {
+    id: 'a6',
+    action: 'Wait for replies from 11 SENT leads',
+    reason: '12 HOT/WARM leads emailed Apr 24. Reply Detector cron running 9/11/1/3/5PM Mon-Fri.',
+    priority: 'medium',
+    source: 'vault/daily/2026-04-29.md',
+  },
+  {
+    id: 'a7',
+    action: 'Get Supabase anon JWT key — dashboard write access needed',
+    reason: 'Dashboard can read but not write. Need eyJ... anon key from Vercel env vars.',
+    priority: 'medium',
+    source: 'This session',
+  },
+  {
+    id: 'a8',
+    action: 'Build out Ops Hub /leads page with live Supabase data',
+    reason: '24 leads are in Supabase. Dashboard should query leads table directly.',
+    priority: 'medium',
+    source: 'This session',
+  },
+];
 
-function ActionCard({ 
-  emoji, 
-  title, 
-  description, 
-  onClick, 
-  state,
-  variant = 'default'
-}: { 
-  emoji: string; 
-  title: string; 
-  description: string; 
-  onClick: () => void;
-  state: ActionState;
-  variant?: 'default' | 'danger';
-}) {
-  return (
-    <button
-      onClick={onClick}
-      disabled={state === 'loading'}
-      className={`w-full text-left p-6 rounded-lg border transition-all ${
-        variant === 'danger' 
-          ? 'bg-red-900 border-red-700 hover:bg-red-800' 
-          : 'bg-gray-800 border-gray-700 hover:bg-gray-750'
-      } disabled:opacity-50 disabled:cursor-not-allowed`}
-    >
-      <div className="flex items-start gap-4">
-        <span className="text-3xl">{emoji}</span>
-        <div className="flex-1">
-          <h3 className="font-bold text-lg mb-1">{title}</h3>
-          <p className="text-gray-400 text-sm">{description}</p>
-        </div>
-        <div className="flex-shrink-0">
-          {state === 'loading' && (
-            <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-          )}
-          {state === 'success' && <span className="text-green-400 text-xl">✓</span>}
-          {state === 'error' && <span className="text-red-400 text-xl">✗</span>}
-          {state === 'idle' && <span className="text-gray-500">→</span>}
-        </div>
-      </div>
-    </button>
-  );
-}
+const BLOCKERS: Blocker[] = [
+  { id: 'b1', item: 'emvy.ai domain', type: 'domain', status: 'waiting_on_dusk', notes: 'Buy from Porkbun tonight' },
+  { id: 'b2', item: 'Exa API key (fallback search)', type: 'api', status: 'waiting_on_external', notes: 'Optional — manual enrich works for now' },
+  { id: 'b3', item: 'Hunter API key', type: 'api', status: 'waiting_on_external', notes: '$49/mo — optional' },
+  { id: 'b4', item: 'Lead Finder → Supabase sync', type: 'integration', status: 'in_progress', notes: 'Cron writes to pipeline.json, disconnected from Supabase' },
+  { id: 'b5', item: 'GA4 on site', type: 'analytics', status: 'waiting_on_dusk', notes: 'Need G-XXXXXXXXXX measurement ID' },
+  { id: 'b6', item: 'Supabase anon JWT key', type: 'integration', status: 'waiting_on_dusk', notes: 'Dashboard write access. Stored in Vercel env vars.' },
+];
 
-function AlertHistoryTable({ alerts }: { alerts: AlertHistory[] }) {
-  if (alerts.length === 0) {
-    return (
-      <div className="text-center py-8 text-gray-500">
-        <p>No alerts sent yet</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="text-left text-gray-400 border-b border-gray-700">
-            <th className="pb-2">Type</th>
-            <th className="pb-2">Message</th>
-            <th className="pb-2">Time</th>
-            <th className="pb-2">Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {alerts.map(alert => (
-            <tr key={alert.id} className="border-b border-gray-800">
-              <td className="py-2">
-                <span className={`px-2 py-1 rounded text-xs ${
-                  alert.alert_type === 'stuck_client' ? 'bg-amber-900 text-amber-300' :
-                  alert.alert_type === 'missing_agent' ? 'bg-red-900 text-red-300' :
-                  'bg-gray-700 text-gray-300'
-                }`}>
-                  {alert.alert_type.replace('_', ' ')}
-                </span>
-              </td>
-              <td className="py-2 text-gray-300">{alert.message}</td>
-              <td className="py-2 text-gray-500">
-                {new Date(alert.sent_at).toLocaleString('en-AW', {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                  timeZone: 'Australia/Perth'
-                })}
-              </td>
-              <td className="py-2">
-                {alert.acknowledged ? (
-                  <span className="text-green-400">✓ Ack'd</span>
-                ) : (
-                  <span className="text-yellow-400">Pending</span>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
+const OFFER = [
+  { tier: 'Lead', desc: 'Free 15-min discovery call', icon: '🎯' },
+  { tier: 'Audit', desc: '$1,500 AI audit', icon: '🔍' },
+  { tier: 'Build', desc: '$3,000–$5,000', icon: '🔨' },
+  { tier: 'Retainer', desc: '$1,500/month', icon: '🔄' },
+];
 
 export default function ActionsPage() {
-  const [clientForm, setClientForm] = useState({ name: '', business: '', stage: 'INBOUND' });
-  const [showClientForm, setShowClientForm] = useState(false);
-  const [showAlerts, setShowAlerts] = useState(false);
-  const [states, setStates] = useState<Record<string, ActionState>>({
-    createClient: 'idle',
-    healthCheck: 'idle',
-    viewAlerts: 'idle',
-    refresh: 'idle',
-  });
-  const [alerts, setAlerts] = useState<AlertHistory[]>(DEMO_ALERTS);
-
-  const setState = (key: string, value: ActionState) => {
-    setStates(prev => ({ ...prev, [key]: value }));
-  };
-
-  const handleCreateClient = async () => {
-    if (!clientForm.name || !clientForm.business) return;
-    setState('createClient', 'loading');
-
-    try {
-      if (isSupabaseConfigured) {
-        const res = await fetch('/api/clients', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(clientForm),
-        });
-        if (!res.ok) throw new Error('Failed');
-      }
-      setState('createClient', 'success');
-      setClientForm({ name: '', business: '', stage: 'INBOUND' });
-      setTimeout(() => {
-        setState('createClient', 'idle');
-        setShowClientForm(false);
-      }, 1500);
-    } catch {
-      setState('createClient', 'error');
-      setTimeout(() => setState('createClient', 'idle'), 2000);
-    }
-  };
-
-  const handleHealthCheck = async () => {
-    setState('healthCheck', 'loading');
-    try {
-      await fetch('/api/health-check', { method: 'POST' });
-      setState('healthCheck', 'success');
-      setTimeout(() => setState('healthCheck', 'idle'), 2000);
-    } catch {
-      setState('healthCheck', 'error');
-      setTimeout(() => setState('healthCheck', 'idle'), 2000);
-    }
-  };
-
-  const handleViewAlerts = async () => {
-    setState('viewAlerts', 'loading');
-    try {
-      if (isSupabaseConfigured) {
-        const res = await fetch('/api/alerts');
-        const data = await res.json();
-        setAlerts(data.alerts || []);
-      }
-      setState('viewAlerts', 'success');
-      setShowAlerts(true);
-      setTimeout(() => setState('viewAlerts', 'idle'), 1000);
-    } catch {
-      setState('viewAlerts', 'error');
-      setTimeout(() => setState('viewAlerts', 'idle'), 2000);
-    }
-  };
-
-  const handleRefresh = () => {
-    setState('refresh', 'loading');
-    window.location.reload();
-  };
+  const urgent = ACTIONS.filter(a => a.priority === 'urgent');
+  const high = ACTIONS.filter(a => a.priority === 'high');
+  const medium = ACTIONS.filter(a => a.priority === 'medium');
+  const blockersWaitingDusk = BLOCKERS.filter(b => b.status === 'waiting_on_dusk').length;
+  const blockersWaitingExt = BLOCKERS.filter(b => b.status === 'waiting_on_external').length;
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <ActionCard
-          emoji="➕"
-          title="Create New Client Job"
-          description="Add a new client to the pipeline"
-          onClick={() => setShowClientForm(!showClientForm)}
-          state={showClientForm ? 'idle' : 'idle'}
-        />
-        <ActionCard
-          emoji="💓"
-          title="Trigger Agent Health Check"
-          description="Ping all agents to confirm they're responding"
-          onClick={handleHealthCheck}
-          state={states.healthCheck}
-        />
-        <ActionCard
-          emoji="📋"
-          title="View Alert History"
-          description="See all Discord alerts sent by the system"
-          onClick={handleViewAlerts}
-          state={states.viewAlerts}
-        />
-        <ActionCard
-          emoji="🔄"
-          title="Refresh All Data"
-          description="Force refresh all views and subscriptions"
-          onClick={handleRefresh}
-          state={states.refresh}
-        />
+      {/* Business Stats */}
+      <div className="grid grid-cols-4 gap-3">
+        <div className="bg-gray-900 rounded-lg p-3 text-center">
+          <div className="text-2xl font-bold text-red-400">{urgent.length}</div>
+          <div className="text-xs text-gray-400">Urgent</div>
+        </div>
+        <div className="bg-gray-900 rounded-lg p-3 text-center">
+          <div className="text-2xl font-bold text-orange-400">{high.length}</div>
+          <div className="text-xs text-gray-400">High</div>
+        </div>
+        <div className="bg-gray-900 rounded-lg p-3 text-center">
+          <div className="text-2xl font-bold text-yellow-400">{blockersWaitingDusk}</div>
+          <div className="text-xs text-gray-400">Waiting You</div>
+        </div>
+        <div className="bg-gray-900 rounded-lg p-3 text-center">
+          <div className="text-2xl font-bold text-gray-500">{blockersWaitingExt}</div>
+          <div className="text-xs text-gray-400">Waiting Ext.</div>
+        </div>
       </div>
 
-      {/* Client Form */}
-      {showClientForm && (
-        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-          <h3 className="font-bold mb-4">New Client</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm text-gray-400 mb-1">Client Name</label>
-              <input
-                type="text"
-                value={clientForm.name}
-                onChange={e => setClientForm(prev => ({ ...prev, name: e.target.value }))}
-                placeholder="Acme Corp"
-                className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white placeholder-gray-500"
-              />
+      {/* Offer Stack */}
+      <div className="bg-gray-900 rounded-lg p-4 border border-gray-700">
+        <h3 className="text-sm font-medium text-gray-400 mb-3">💰 EMVY Offer Stack</h3>
+        <div className="grid grid-cols-4 gap-3">
+          {OFFER.map(o => (
+            <div key={o.tier} className="text-center">
+              <div className="text-2xl mb-1">{o.icon}</div>
+              <div className="font-bold text-sm">{o.tier}</div>
+              <div className="text-xs text-gray-400">{o.desc}</div>
             </div>
-            <div>
-              <label className="block text-sm text-gray-400 mb-1">Business Type</label>
-              <input
-                type="text"
-                value={clientForm.business}
-                onChange={e => setClientForm(prev => ({ ...prev, business: e.target.value }))}
-                placeholder="SaaS"
-                className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white placeholder-gray-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm text-gray-400 mb-1">Initial Stage</label>
-              <select
-                value={clientForm.stage}
-                onChange={e => setClientForm(prev => ({ ...prev, stage: e.target.value }))}
-                className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white"
-              >
-                <option value="INBOUND">INBOUND</option>
-                <option value="PRE-CALL RESEARCH">PRE-CALL RESEARCH</option>
-                <option value="CALL">CALL</option>
-                <option value="AUDIT">AUDIT</option>
-                <option value="BUILD">BUILD</option>
-                <option value="DONE">DONE</option>
-              </select>
-            </div>
-          </div>
-          <div className="flex gap-2 mt-4">
-            <button
-              onClick={handleCreateClient}
-              disabled={!clientForm.name || !clientForm.business}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded text-white font-medium"
-            >
-              {states.createClient === 'loading' ? 'Creating...' : 'Create Client'}
-            </button>
-            <button
-              onClick={() => setShowClientForm(false)}
-              className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded text-white"
-            >
-              Cancel
-            </button>
+          ))}
+        </div>
+        <div className="mt-3 pt-3 border-t border-gray-700 text-center">
+          <a href="https://cal.com/jake-emvy/15-min-ai-chat" target="_blank" rel="noopener noreferrer"
+            className="text-blue-400 hover:text-blue-300 text-sm font-medium">
+            ↗ Book discovery call → cal.com/jake-emvy/15-min-ai-chat
+          </a>
+        </div>
+      </div>
+
+      {/* Pipeline Summary */}
+      <div className="bg-gray-900 rounded-lg p-4 border border-gray-700">
+        <h3 className="text-sm font-medium text-gray-400 mb-3">📊 Pipeline Snapshot</h3>
+        <div className="grid grid-cols-5 gap-2 text-center text-xs">
+          <div><div className="text-lg font-bold text-red-400">1</div><div className="text-gray-500">HOT</div></div>
+          <div><div className="text-lg font-bold text-orange-400">4</div><div className="text-gray-500">WARM</div></div>
+          <div><div className="text-lg font-bold text-indigo-400">9</div><div className="text-gray-500">DISCOVERED</div></div>
+          <div><div className="text-lg font-bold text-blue-400">11</div><div className="text-gray-500">SENT</div></div>
+          <div><div className="text-lg font-bold text-gray-400">9</div><div className="text-gray-500">SKIP</div></div>
+        </div>
+      </div>
+
+      {/* Urgent Actions */}
+      {urgent.length > 0 && (
+        <div>
+          <h2 className="text-sm font-medium text-red-400 mb-3 flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+            URGENT — Do Today
+          </h2>
+          <div className="space-y-2">
+            {urgent.map(action => (
+              <div key={action.id} className="bg-red-950 border border-red-800 rounded-lg p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1">
+                    <h3 className="font-medium text-sm text-red-200">{action.action}</h3>
+                    <p className="text-xs text-red-300 mt-1">{action.reason}</p>
+                    <p className="text-xs text-red-400 mt-1 opacity-70">Source: {action.source}</p>
+                  </div>
+                  {action.due_date && (
+                    <span className="text-xs text-red-400 bg-red-900 px-2 py-0.5 rounded whitespace-nowrap">
+                      {action.due_date}
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}
 
-      {/* Alert History */}
-      {showAlerts && (
-        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="font-bold">Alert History</h3>
-            <button
-              onClick={() => setShowAlerts(false)}
-              className="text-gray-400 hover:text-white"
-            >
-              ✕
-            </button>
+      {/* High Priority */}
+      {high.length > 0 && (
+        <div>
+          <h2 className="text-sm font-medium text-orange-400 mb-3">⚡ High Priority</h2>
+          <div className="space-y-2">
+            {high.map(action => (
+              <div key={action.id} className="bg-gray-900 border border-gray-700 rounded-lg p-4">
+                <h3 className="font-medium text-sm text-gray-200">{action.action}</h3>
+                <p className="text-xs text-gray-400 mt-1">{action.reason}</p>
+                <p className="text-xs text-gray-600 mt-1">Source: {action.source}</p>
+              </div>
+            ))}
           </div>
-          <AlertHistoryTable alerts={alerts} />
         </div>
       )}
 
-      {/* System Info */}
-      <div className="bg-gray-900 rounded-lg p-4 text-sm text-gray-400">
-        <h4 className="font-medium text-gray-300 mb-2">System Configuration</h4>
-        <div className="grid grid-cols-2 gap-2">
-          <span>Supabase:</span>
-          <span className={isSupabaseConfigured ? 'text-green-400' : 'text-yellow-400'}>
-            {isSupabaseConfigured ? 'Configured' : 'Not Configured (Demo Mode)'}
-          </span>
-          <span>Discord Alerts:</span>
-          <span className={process.env.DISCORD_WEBHOOK_URL ? 'text-green-400' : 'text-yellow-400'}>
-            {process.env.DISCORD_WEBHOOK_URL ? 'Configured' : 'Not Configured'}
-          </span>
+      {/* Medium Priority */}
+      {medium.length > 0 && (
+        <div>
+          <h2 className="text-sm font-medium text-gray-400 mb-3">📋 Medium Priority</h2>
+          <div className="space-y-2">
+            {medium.map(action => (
+              <div key={action.id} className="bg-gray-900 border border-gray-800 rounded-lg p-3">
+                <h3 className="font-medium text-sm text-gray-300">{action.action}</h3>
+                <p className="text-xs text-gray-500 mt-1">{action.reason}</p>
+              </div>
+            ))}
+          </div>
         </div>
+      )}
+
+      {/* Blockers from Dusk */}
+      {BLOCKERS.filter(b => b.status === 'waiting_on_dusk').length > 0 && (
+        <div>
+          <h2 className="text-sm font-medium text-gray-400 mb-3">🚧 Waiting on You</h2>
+          <div className="space-y-2">
+            {BLOCKERS.filter(b => b.status === 'waiting_on_dusk').map(blocker => (
+              <div key={blocker.id} className="bg-red-950 border border-red-800 rounded-lg p-3">
+                <h3 className="font-medium text-sm text-red-200">{blocker.item}</h3>
+                <p className="text-xs text-red-300 mt-0.5">{blocker.notes}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ICP Reminder */}
+      <div className="bg-gray-900 rounded-lg p-4 border border-gray-700 text-xs text-gray-500">
+        <strong className="text-gray-400">ICP:</strong> 5+ years, multiple staff, actual pain evidence. 
+        National scope — any SMB Australia. No email = archived. Enrichment = gate before staging.
+        Hot leads: Dicandilo Thomson (7/10), Aircon Express Perth (10/10), Alpha Co Plumbing (10/10).
       </div>
     </div>
   );
 }
-
-const DEMO_ALERTS: AlertHistory[] = [
-  {
-    id: '1',
-    alert_type: 'stuck_client',
-    message: 'Bloom Florist stuck in AUDIT for 26h',
-    sent_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-    acknowledged: false,
-  },
-  {
-    id: '2',
-    alert_type: 'missing_agent',
-    message: 'Executioner missing heartbeat (45m ago)',
-    sent_at: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
-    acknowledged: true,
-  },
-];
