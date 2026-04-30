@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
-import Nav from '@/components/Nav';
-import StatusBar from '@/components/StatusBar';
+import Sidebar from '@/components/Sidebar';
+import Header from '@/components/Header';
 
 export const metadata: Metadata = {
   title: 'EMVY — Ops Dashboard',
@@ -16,19 +16,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="bg-gray-950 text-gray-100 min-h-screen">
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <header className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <span className="text-3xl">🎯</span>
-              <div>
-                <h1 className="text-2xl font-bold">EMVY</h1>
-                <p className="text-xs text-gray-500">AI Audit Consultancy</p>
-              </div>
-            </div>
-            <StatusBar />
-          </header>
-          <Nav />
-          <main className="mt-6">{children}</main>
+        <div className="flex h-screen overflow-hidden">
+          <Sidebar />
+          <div className="flex-1 flex flex-col overflow-hidden">
+            <Header />
+            <main className="flex-1 overflow-y-auto p-6">
+              {children}
+            </main>
+          </div>
         </div>
       </body>
     </html>
