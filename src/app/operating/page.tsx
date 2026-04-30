@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase';
 
 interface Process {
   id: string;
@@ -32,19 +33,15 @@ export default function OperatingPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    if (!url || !key) { setLoading(false); return; }
-
     Promise.all([
-      fetch(`${url}/rest/v1/processes?select=*&order=name.asc`, { headers: { apikey: key, Authorization: `Bearer ${key}` } }).then(r => r.json()),
-      fetch(`${url}/rest/v1/systems?select=*&order=name.asc`, { headers: { apikey: key, Authorization: `Bearer ${key}` } }).then(r => r.json()),
-      fetch(`${url}/rest/v1/api_integrations?select=*&order=name.asc`, { headers: { apikey: key, Authorization: `Bearer ${key}` } }).then(r => r.json()),
+      supabase.from('processes').select('*').order('name', { ascending: true }),
+      supabase.from('systems').select('*').order('name', { ascending: true }),
+      supabase.from('api_integrations').select('*').order('name', { ascending: true }),
     ])
       .then(([p, s, a]) => {
-        setProcesses(p || []);
-        setSystems(s || []);
-        setApis(a || []);
+        setProcesses(p.data || []);
+        setSystems(s.data || []);
+        setApis(a.data || []);
         setLoading(false);
       })
       .catch(() => setLoading(false));

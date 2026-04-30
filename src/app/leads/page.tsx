@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase';
 
 interface Lead {
   id: string;
@@ -43,15 +44,11 @@ export default function LeadsPage() {
   const [filter, setFilter] = useState('ALL');
 
   useEffect(() => {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    if (!url || !key) { setLoading(false); return; }
-
-    fetch(`${url}/rest/v1/leads?select=*&order=created_at.desc`, {
-      headers: { apikey: key, Authorization: `Bearer ${key}` },
-    })
-      .then(r => r.json())
-      .then(d => { setLeads(d || []); setLoading(false); })
+    supabase.from('leads').select('*').order('created_at', { ascending: false })
+      .then(({ data, error }) => {
+        if (!error) setLeads(data || []);
+        setLoading(false);
+      })
       .catch(() => setLoading(false));
   }, []);
 
@@ -65,7 +62,7 @@ export default function LeadsPage() {
           <h1 className="text-2xl font-bold text-white">Leads Pipeline</h1>
           <p className="text-gray-400 text-sm">{leads.length} total · Supabase</p>
         </div>
-        <a href="https://iszrozctcyglujzulxxn.supabase.co" target="_blank" className="text-xs bg-gray-800 text-gray-400 px-3 py-1.5 rounded border border-gray-700 hover:border-gray-600">
+        <a href="https://rrjktvvnzjzlfquaghut.supabase.co" target="_blank" className="text-xs bg-gray-800 text-gray-400 px-3 py-1.5 rounded border border-gray-700 hover:border-gray-600">
           Open Supabase →
         </a>
       </div>

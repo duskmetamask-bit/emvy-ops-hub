@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase';
 
 interface BusinessEntity {
   id: string;
@@ -16,15 +17,8 @@ export default function BusinessPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    if (!url || !key) { setLoading(false); return; }
-
-    fetch(`${url}/rest/v1/business_entities?select=*&order=name.asc`, {
-      headers: { apikey: key, Authorization: `Bearer ${key}` },
-    })
-      .then(r => r.json())
-      .then(d => { setEntities(d); setLoading(false); })
+    supabase.from('business_entities').select('*').order('name', { ascending: true })
+      .then(({ data }) => { setEntities(data || []); setLoading(false); })
       .catch(() => setLoading(false));
   }, []);
 

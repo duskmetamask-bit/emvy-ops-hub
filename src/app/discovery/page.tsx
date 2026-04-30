@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase';
 
 interface WarmLead {
   id: string;
@@ -18,15 +19,8 @@ export default function DiscoveryPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    if (!url || !key) { setLoading(false); return; }
-
-    fetch(`${url}/rest/v1/warm_leads?select=*&order=created_at.desc`, {
-      headers: { apikey: key, Authorization: `Bearer ${key}` },
-    })
-      .then(r => r.json())
-      .then(d => { setLeads(d || []); setLoading(false); })
+    supabase.from('warm_leads').select('*').order('created_at', { ascending: false })
+      .then(({ data }) => { setLeads(data || []); setLoading(false); })
       .catch(() => setLoading(false));
   }, []);
 
