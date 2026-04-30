@@ -25,8 +25,9 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.from('leads').select('*')
-      .then(({ data }) => {
+    const load = async () => {
+      try {
+        const { data } = await supabase.from('leads').select('*');
         const leads = data || [];
         const hot = leads.filter((l: any) => l.temp === 'HOT').length;
         const sent = leads.filter((l: any) => l.stage === 'SENT').length;
@@ -41,14 +42,13 @@ export default function HomePage() {
           { label: 'Discovered', value: discovered, icon: '🔍', color: 'text-indigo-400' },
         ]);
 
-        // 5 most recent leads
         const sorted = [...leads].sort((a: any, b: any) =>
           new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         ).slice(0, 5);
         setRecent(sorted);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
+      } catch { /* silent */ } finally { setLoading(false); }
+    };
+    load();
   }, []);
 
   const STAGE_COLORS: Record<string, string> = {

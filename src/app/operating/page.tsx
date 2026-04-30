@@ -33,18 +33,19 @@ export default function OperatingPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([
-      supabase.from('processes').select('*').order('name', { ascending: true }),
-      supabase.from('systems').select('*').order('name', { ascending: true }),
-      supabase.from('api_integrations').select('*').order('name', { ascending: true }),
-    ])
-      .then(([p, s, a]) => {
+    const load = async () => {
+      try {
+        const [p, s, a] = await Promise.all([
+          supabase.from('processes').select('*').order('name', { ascending: true }),
+          supabase.from('systems').select('*').order('name', { ascending: true }),
+          supabase.from('api_integrations').select('*').order('name', { ascending: true }),
+        ]);
         setProcesses(p.data || []);
         setSystems(s.data || []);
         setApis(a.data || []);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
+      } catch { /* silent */ } finally { setLoading(false); }
+    };
+    load();
   }, []);
 
   return (

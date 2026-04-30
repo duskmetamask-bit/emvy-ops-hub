@@ -19,9 +19,13 @@ export default function DiscoveryPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.from('warm_leads').select('*').order('created_at', { ascending: false })
-      .then(({ data }) => { setLeads(data || []); setLoading(false); })
-      .catch(() => setLoading(false));
+    const load = async () => {
+      try {
+        const { data } = await supabase.from('warm_leads').select('*').order('created_at', { ascending: false });
+        setLeads(data || []);
+      } catch { /* silent */ } finally { setLoading(false); }
+    };
+    load();
   }, []);
 
   return (

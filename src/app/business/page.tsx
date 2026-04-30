@@ -17,9 +17,13 @@ export default function BusinessPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.from('business_entities').select('*').order('name', { ascending: true })
-      .then(({ data }) => { setEntities(data || []); setLoading(false); })
-      .catch(() => setLoading(false));
+    const load = async () => {
+      try {
+        const { data } = await supabase.from('business_entities').select('*').order('name', { ascending: true });
+        setEntities(data || []);
+      } catch { /* silent */ } finally { setLoading(false); }
+    };
+    load();
   }, []);
 
   return (

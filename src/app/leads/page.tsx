@@ -46,9 +46,13 @@ export default function LeadsPage() {
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
 
   useEffect(() => {
-    supabase.from('leads').select('*').order('created_at', { ascending: false })
-      .then(({ data }) => { setLeads(data || []); setLoading(false); })
-      .catch(() => setLoading(false));
+    const load = async () => {
+      try {
+        const { data } = await supabase.from('leads').select('*').order('created_at', { ascending: false });
+        setLeads(data || []);
+      } catch { /* silent */ } finally { setLoading(false); }
+    };
+    load();
   }, []);
 
   const getByStage = (stage: string) => {
