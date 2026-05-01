@@ -99,7 +99,7 @@ export default function SeoPage() {
   };
 
   const categories = ['domain', 'analytics', 'technical', 'content'] as const;
-  const categoryLabels = { domain: '🌐 Domain', analytics: '📊 Analytics', technical: '⚙️ Technical', content: '✍️ Content' };
+  const categoryLabels = { domain: 'Domain', analytics: 'Analytics', technical: 'Technical', content: 'Content' };
 
   return (
     <div className="space-y-6">
@@ -119,7 +119,7 @@ export default function SeoPage() {
 
       {/* Trigger Banner */}
       <div className="bg-amber-900 border border-amber-700 rounded-lg p-4 text-sm">
-        <p className="text-amber-200 font-medium">⚡ Activation Trigger</p>
+        <p className="text-amber-200 font-medium">Activation Trigger</p>
         <p className="text-amber-300 mt-1">Activate SEO when: 3+ consistent clients + outbound running without daily mgmt + calendar full</p>
       </div>
 
@@ -245,7 +245,7 @@ export default function SeoPage() {
 
       {/* Distribution */}
       <div className="bg-gray-900 rounded-lg p-4 border border-gray-700">
-        <h3 className="font-medium text-gray-300 mb-3">📣 Distribution (when active)</h3>
+        <h3 className="font-medium text-gray-300 mb-3">Distribution (when active)</h3>
         <div className="grid grid-cols-2 gap-3 text-xs">
           <div className="space-y-1">
             <p className="text-gray-500">Free</p>

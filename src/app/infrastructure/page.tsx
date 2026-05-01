@@ -37,10 +37,10 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 const STATUS_LABELS: Record<string, string> = {
-  live: '✅ Live',
-  in_progress: '🔄 In Progress',
-  needed: '⏳ Needed',
-  blocked: '🚫 Blocked',
+  live: 'Live',
+  in_progress: 'In Progress',
+  needed: 'Needed',
+  blocked: 'Blocked',
 };
 
 export default function InfrastructurePage() {
@@ -67,7 +67,7 @@ export default function InfrastructurePage() {
 
       {/* Live Infrastructure */}
       <div>
-        <h2 className="text-sm font-medium text-gray-400 mb-3">🖥️ Infrastructure</h2>
+        <h2 className="text-sm font-medium text-gray-400 mb-3">Infrastructure</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {INFRA.map(item => (
             <div key={item.id} className="bg-gray-900 rounded-lg p-4 border border-gray-700">
@@ -95,7 +95,7 @@ export default function InfrastructurePage() {
 
       {/* Blockers */}
       <div>
-        <h2 className="text-sm font-medium text-gray-400 mb-3">🚧 Blockers</h2>
+        <h2 className="text-sm font-medium text-gray-400 mb-3">Blockers</h2>
         <div className="space-y-2">
           {BLOCKERS.map(blocker => (
             <div key={blocker.id} className="bg-gray-900 rounded-lg p-4 border border-gray-700">
@@ -122,7 +122,7 @@ export default function InfrastructurePage() {
 
       {/* Cron Jobs */}
       <div>
-        <h2 className="text-sm font-medium text-gray-400 mb-3">⏰ Active Crons (7)</h2>
+        <h2 className="text-sm font-medium text-gray-400 mb-3">Active Crons (7)</h2>
         <div className="bg-gray-900 rounded-lg overflow-hidden border border-gray-700">
           <table className="w-full text-xs">
             <thead>
@@ -183,31 +183,31 @@ export default function InfrastructurePage() {
 
       {/* API Keys / Credentials */}
       <div>
-        <h2 className="text-sm font-medium text-gray-400 mb-3">🔐 Credentials Status</h2>
+        <h2 className="text-sm font-medium text-gray-400 mb-3">Credentials Status</h2>
         <div className="bg-gray-900 rounded-lg p-4 border border-gray-700 text-xs space-y-2">
           <div className="flex justify-between">
             <span className="text-gray-400">Gmail SMTP</span>
-            <span className="text-green-400">✅ Live (dawnlabsai@gmail.com)</span>
+            <span className="text-green-400">Live (dawnlabsai@gmail.com)</span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-400">CAL API</span>
-            <span className="text-green-400">✅ Live</span>
+            <span className="text-green-400">Live</span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-400">VAPI (Callie)</span>
-            <span className="text-green-400">✅ Live</span>
+            <span className="text-green-400">Live</span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-400">X API</span>
-            <span className="text-green-400">✅ Live</span>
+            <span className="text-green-400">Live</span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-400">NVIDIA API</span>
-            <span className="text-green-400">✅ Live</span>
+            <span className="text-green-400">Live</span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-400">Supabase</span>
-            <span className="text-yellow-400">⚠️ Read-only (anon key missing)</span>
+            <span className="text-yellow-400">Read-only (anon key missing)</span>
           </div>
         </div>
       </div>

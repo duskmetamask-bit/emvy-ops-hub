@@ -6,7 +6,6 @@ import { supabase } from '@/lib/supabase';
 interface Stat {
   label: string;
   value: number;
-  icon: string;
   color: string;
 }
 
@@ -35,11 +34,11 @@ export default function HomePage() {
         const warm = leads.filter((l: any) => l.temp === 'WARM').length;
 
         setStats([
-          { label: 'Total Leads', value: leads.length, icon: '🎯', color: 'text-blue-400' },
-          { label: 'Hot Leads', value: hot, icon: '🔥', color: 'text-red-400' },
-          { label: 'Emails Sent', value: sent, icon: '📧', color: 'text-purple-400' },
-          { label: 'Warm', value: warm, icon: '☀️', color: 'text-orange-400' },
-          { label: 'Discovered', value: discovered, icon: '🔍', color: 'text-indigo-400' },
+          { label: 'Total Leads', value: leads.length, color: 'text-blue-400' },
+          { label: 'Hot Leads', value: hot, color: 'text-red-400' },
+          { label: 'Emails Sent', value: sent, color: 'text-purple-400' },
+          { label: 'Warm', value: warm, color: 'text-orange-400' },
+          { label: 'Discovered', value: discovered, color: 'text-indigo-400' },
         ]);
 
         const sorted = [...leads].sort((a: any, b: any) =>
@@ -90,7 +89,6 @@ export default function HomePage() {
         ) : (
           stats.map((s) => (
             <div key={s.label} className="bg-gray-900 rounded-xl p-5 border border-gray-800 hover:border-gray-700 transition-colors">
-              <div className="text-2xl mb-3">{s.icon}</div>
               <div className="text-3xl font-bold text-white mb-1">{s.value}</div>
               <div className={`text-sm ${s.color}`}>{s.label}</div>
             </div>
@@ -151,8 +149,6 @@ export default function HomePage() {
               { stage: 'BUILD', color: 'bg-emerald-500', label: 'Build Started' },
               { stage: 'DONE', color: 'bg-green-600', label: 'Client Won' },
             ].map(({ stage, color, label }) => {
-              const count = loading ? 0 : (stats.find(s => s.label === 'Total Leads') ? [0] : [0]).length; // simplified
-              const stageCount = loading ? 0 : (recent.length > 0 ? '—' : 0);
               return (
                 <div key={stage} className="flex items-center gap-3">
                   <div className={`w-2 h-2 rounded-full ${color}`} />
@@ -168,16 +164,15 @@ export default function HomePage() {
       {/* Quick links */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { href: '/leads', icon: '🎯', label: 'Leads Pipeline', desc: 'Manage prospects' },
-          { href: '/discovery', icon: '🔍', label: 'Discovery', desc: 'Warm leads & outreach' },
-          { href: '/audit', icon: '📋', label: 'Audit', desc: 'Process & deliverables' },
-          { href: '/apis', icon: '🔑', label: 'API Keys', desc: 'All integrations' },
-        ].map(({ href, icon, label, desc }) => (
+          { href: '/leads', label: 'Leads Pipeline', desc: 'Manage prospects' },
+          { href: '/discovery', label: 'Discovery', desc: 'Warm leads & outreach' },
+          { href: '/audit', label: 'Audit', desc: 'Process & deliverables' },
+          { href: '/apis', label: 'API Keys', desc: 'All integrations' },
+        ].map(({ href, label, desc }) => (
           <a key={href} href={href}
             className="bg-gray-900 rounded-xl p-4 border border-gray-800 hover:border-gray-700 hover:bg-gray-800/50 transition-all group">
-            <div className="text-2xl mb-2">{icon}</div>
-            <div className="text-white text-sm font-medium group-hover:text-blue-300 transition-colors">{label}</div>
-            <div className="text-gray-500 text-xs mt-0.5">{desc}</div>
+            <div className="text-white text-sm font-medium group-hover:text-blue-300 transition-colors mb-1">{label}</div>
+            <div className="text-gray-500 text-xs">{desc}</div>
           </a>
         ))}
       </div>

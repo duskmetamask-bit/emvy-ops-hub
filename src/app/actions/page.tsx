@@ -76,10 +76,10 @@ const BLOCKERS: Blocker[] = [
 ];
 
 const OFFER = [
-  { tier: 'Lead', desc: 'Free 15-min discovery call', icon: '🎯' },
-  { tier: 'Audit', desc: '$1,500 AI audit', icon: '🔍' },
-  { tier: 'Build', desc: '$3,000–$5,000', icon: '🔨' },
-  { tier: 'Retainer', desc: '$1,500/month', icon: '🔄' },
+  { tier: 'Lead', desc: 'Free 15-min discovery call' },
+  { tier: 'Audit', desc: '$1,500 AI audit' },
+  { tier: 'Build', desc: '$3,000–$5,000' },
+  { tier: 'Retainer', desc: '$1,500/month' },
 ];
 
 export default function ActionsPage() {
@@ -113,11 +113,10 @@ export default function ActionsPage() {
 
       {/* Offer Stack */}
       <div className="bg-gray-900 rounded-lg p-4 border border-gray-700">
-        <h3 className="text-sm font-medium text-gray-400 mb-3">💰 EMVY Offer Stack</h3>
+        <h3 className="text-sm font-medium text-gray-400 mb-3">EMVY Offer Stack</h3>
         <div className="grid grid-cols-4 gap-3">
           {OFFER.map(o => (
             <div key={o.tier} className="text-center">
-              <div className="text-2xl mb-1">{o.icon}</div>
               <div className="font-bold text-sm">{o.tier}</div>
               <div className="text-xs text-gray-400">{o.desc}</div>
             </div>
@@ -133,7 +132,7 @@ export default function ActionsPage() {
 
       {/* Pipeline Summary */}
       <div className="bg-gray-900 rounded-lg p-4 border border-gray-700">
-        <h3 className="text-sm font-medium text-gray-400 mb-3">📊 Pipeline Snapshot</h3>
+        <h3 className="text-sm font-medium text-gray-400 mb-3">Pipeline Snapshot</h3>
         <div className="grid grid-cols-5 gap-2 text-center text-xs">
           <div><div className="text-lg font-bold text-red-400">1</div><div className="text-gray-500">HOT</div></div>
           <div><div className="text-lg font-bold text-orange-400">4</div><div className="text-gray-500">WARM</div></div>
@@ -174,7 +173,7 @@ export default function ActionsPage() {
       {/* High Priority */}
       {high.length > 0 && (
         <div>
-          <h2 className="text-sm font-medium text-orange-400 mb-3">⚡ High Priority</h2>
+          <h2 className="text-sm font-medium text-orange-400 mb-3">High Priority</h2>
           <div className="space-y-2">
             {high.map(action => (
               <div key={action.id} className="bg-gray-900 border border-gray-700 rounded-lg p-4">
@@ -190,7 +189,7 @@ export default function ActionsPage() {
       {/* Medium Priority */}
       {medium.length > 0 && (
         <div>
-          <h2 className="text-sm font-medium text-gray-400 mb-3">📋 Medium Priority</h2>
+          <h2 className="text-sm font-medium text-gray-400 mb-3">Medium Priority</h2>
           <div className="space-y-2">
             {medium.map(action => (
               <div key={action.id} className="bg-gray-900 border border-gray-800 rounded-lg p-3">
@@ -205,7 +204,7 @@ export default function ActionsPage() {
       {/* Blockers from Dusk */}
       {BLOCKERS.filter(b => b.status === 'waiting_on_dusk').length > 0 && (
         <div>
-          <h2 className="text-sm font-medium text-gray-400 mb-3">🚧 Waiting on You</h2>
+          <h2 className="text-sm font-medium text-gray-400 mb-3">Waiting on You</h2>
           <div className="space-y-2">
             {BLOCKERS.filter(b => b.status === 'waiting_on_dusk').map(blocker => (
               <div key={blocker.id} className="bg-red-950 border border-red-800 rounded-lg p-3">
