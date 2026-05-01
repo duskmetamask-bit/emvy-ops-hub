@@ -6,14 +6,14 @@ import { supabase } from '@/lib/supabase';
 interface WarmLead {
   id: string;
   name: string;
-  company: string;
+  business_name: string;
+  contact_email: string;
+  contact_phone: string;
   source: string;
-  pain_signal: string;
   status: string;
-  contacted_at?: string;
-  notes?: string;
-  email?: string;
-  phone?: string;
+  industry: string;
+  notes: string;
+  potential_revenue?: string;
   created_at: string;
 }
 
@@ -100,36 +100,34 @@ export default function DiscoveryPage() {
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-sm font-semibold text-[var(--text-primary)]">{l.name}</span>
                         <span className="text-xs text-[var(--text-muted)]">·</span>
-                        <span className="text-xs text-[var(--text-secondary)]">{l.company}</span>
+                        <span className="text-xs text-[var(--text-secondary)]">{l.business_name}</span>
+                        {l.industry && <span className="text-xs text-[var(--text-muted)]">· {l.industry}</span>}
                       </div>
                       <div className="flex items-center gap-3 mt-1.5 flex-wrap">
                         {l.source && (
                           <span className="text-xs text-[var(--text-muted)]">
-                            <span className="text-[var(--text-muted)] opacity-60">Source:</span> {l.source}
+                            <span className="opacity-60">Source:</span> {l.source}
                           </span>
                         )}
-                        {l.email && (
-                          <span className="text-xs font-mono text-[var(--text-muted)]">{l.email}</span>
+                        {l.contact_email && (
+                          <span className="text-xs font-mono text-[var(--text-muted)]">{l.contact_email}</span>
+                        )}
+                        {l.contact_phone && (
+                          <span className="text-xs font-mono text-[var(--text-muted)]">{l.contact_phone}</span>
                         )}
                       </div>
-                      {l.pain_signal && (
-                        <p className="text-xs text-orange-400 mt-2 leading-relaxed">{l.pain_signal}</p>
-                      )}
                       {l.notes && (
-                        <p className="text-xs text-[var(--text-muted)] mt-1.5 leading-relaxed line-clamp-2">{l.notes}</p>
+                        <p className="text-xs text-orange-400 mt-2 leading-relaxed">{l.notes}</p>
                       )}
                     </div>
                     <div className="flex flex-col items-end gap-2 shrink-0">
                       <span className={`badge ${meta.bg}`} style={{ color: meta.color, border: `1px solid ${meta.color}30` }}>
                         {l.status}
                       </span>
-                      {l.contacted_at && (
-                        <span className="text-[10px] text-[var(--text-muted)]">{l.contacted_at}</span>
-                      )}
-                      {l.email && (
-                        <a href={`mailto:${l.email}`}
+                      {l.contact_email && (
+                        <a href={`mailto:${l.contact_email}`}
                           className="text-xs font-medium text-[var(--accent-blue)] hover:text-blue-400 transition-colors">
-                          Email ↗
+                          Email
                         </a>
                       )}
                     </div>
