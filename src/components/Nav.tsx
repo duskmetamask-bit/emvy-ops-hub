@@ -14,6 +14,7 @@ const PROCESS_FLOW = [
 ];
 
 const TOOLS = [
+  { href: '/content', label: 'Content' },
   { href: '/apis', label: 'APIs' },
   { href: '/seo', label: 'SEO' },
   { href: '/infrastructure', label: 'Infra' },
