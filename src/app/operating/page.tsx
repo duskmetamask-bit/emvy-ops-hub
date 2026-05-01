@@ -26,6 +26,16 @@ interface ApiIntegration {
   purpose: string;
 }
 
+const CORE_SYSTEMS = [
+  { name: 'Supabase', type: 'Database', status: 'Live', purpose: 'CRM, leads, audit reports, business data' },
+  { name: 'Vercel', type: 'Hosting', status: 'Live', purpose: 'emvyai.vercel.app deployment' },
+  { name: 'Gmail SMTP', type: 'Email', status: 'Live', purpose: 'dawnlabsai@gmail.com outreach' },
+  { name: 'CAL.com', type: 'Scheduling', status: 'Live', purpose: 'jake-emvy/15-min-ai-chat booking' },
+  { name: 'VAPI', type: 'Voice AI', status: 'Live', purpose: 'AI phone agent (Callie)' },
+  { name: 'NVIDIA API', type: 'AI/ML', status: 'Live', purpose: 'LLM inference, AI processing' },
+  { name: 'X API', type: 'Social', status: 'Live', purpose: 'Social monitoring and posting' },
+];
+
 export default function OperatingPage() {
   const [processes, setProcesses] = useState<Process[]>([]);
   const [systems, setSystems] = useState<System[]>([]);
@@ -49,77 +59,115 @@ export default function OperatingPage() {
   }, []);
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-white mb-1">Operating Structure</h1>
-        <p className="text-gray-400 text-sm">Processes · Systems · APIs</p>
+    <div className="space-y-6 fade-in">
+
+      {/* Header */}
+      <div className="page-header">
+        <h1 className="page-title">Operating</h1>
+        <p className="page-subtitle">Processes · Systems · API Integrations</p>
       </div>
 
-      <div className="grid gap-4">
-        <div className="bg-gray-900 rounded-xl p-6 border border-gray-700">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-white">Processes</h2>
-            <span className="text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded">{processes.length} tracked</span>
-          </div>
-          {loading ? <p className="text-gray-500">Loading...</p> : processes.length === 0 ? (
-            <p className="text-gray-500 text-sm text-center py-4">No processes yet — add to processes table in Supabase</p>
-          ) : (
-            <div className="space-y-2">
-              {processes.map(p => (
-                <div key={p.id} className="p-3 bg-gray-800 rounded-lg">
-                  <div className="flex justify-between items-start">
-                    <div><p className="text-white font-medium">{p.name}</p><p className="text-gray-400 text-xs">{p.description}</p></div>
-                    <span className="text-xs bg-gray-700 text-gray-300 px-2 py-0.5 rounded shrink-0 ml-2">{p.status}</span>
-                  </div>
-                  {p.owner && <p className="text-gray-500 text-xs mt-1">Owner: {p.owner}</p>}
-                </div>
-              ))}
-            </div>
-          )}
+      {/* Core Systems */}
+      <div className="card p-5">
+        <div className="flex items-center justify-between mb-4">
+          <div className="section-title" style={{ marginBottom: 0 }}>Core Systems</div>
+          <span className="badge" style={{ background: '#a855f720', color: '#a855f7', border: '1px solid #a855f730' }}>
+            {CORE_SYSTEMS.filter(s => s.status === 'Live').length} live
+          </span>
         </div>
-
-        <div className="bg-gray-900 rounded-xl p-6 border border-gray-700">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-white">Systems</h2>
-            <span className="text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded">{systems.length} active</span>
-          </div>
-          {loading ? <p className="text-gray-500">Loading...</p> : systems.length === 0 ? (
-            <p className="text-gray-500 text-sm text-center py-4">No systems yet — add to systems table in Supabase</p>
-          ) : (
-            <div className="space-y-2">
-              {systems.map(s => (
-                <div key={s.id} className="p-3 bg-gray-800 rounded-lg">
-                  <div className="flex justify-between items-start">
-                    <div><p className="text-white font-medium">{s.name}</p><p className="text-gray-400 text-xs">{s.type} · {s.purpose}</p></div>
-                    <span className="text-xs bg-gray-700 text-gray-300 px-2 py-0.5 rounded shrink-0 ml-2">{s.status}</span>
-                  </div>
-                </div>
-              ))}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {CORE_SYSTEMS.map(sys => (
+            <div key={sys.name} className="flex items-start justify-between p-3 rounded-lg"
+              style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)' }}>
+              <div>
+                <p className="text-sm font-semibold text-[var(--text-primary)]">{sys.name}</p>
+                <p className="text-xs text-[var(--text-muted)]">{sys.type} · {sys.purpose}</p>
+              </div>
+              <span className="badge shrink-0" style={{
+                background: sys.status === 'Live' ? '#10b98120' : '#52525b20',
+                color: sys.status === 'Live' ? '#10b981' : '#52525b',
+                border: sys.status === 'Live' ? '#10b98130' : '#27272a',
+              }}>
+                {sys.status}
+              </span>
             </div>
-          )}
-        </div>
-
-        <div className="bg-gray-900 rounded-xl p-6 border border-gray-700">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-white">API Integrations</h2>
-            <a href="/apis" className="text-xs text-blue-400 hover:text-blue-300">View all APIs →</a>
-          </div>
-          {loading ? <p className="text-gray-500">Loading...</p> : apis.length === 0 ? (
-            <p className="text-gray-500 text-sm text-center py-4">No API integrations tracked — see /apis for full list</p>
-          ) : (
-            <div className="space-y-2">
-              {apis.map(a => (
-                <div key={a.id} className="p-3 bg-gray-800 rounded-lg">
-                  <div className="flex justify-between items-start">
-                    <div><p className="text-white font-medium">{a.name}</p><p className="text-gray-400 text-xs">{a.purpose}</p></div>
-                    <span className={`text-xs px-2 py-0.5 rounded shrink-0 ml-2 ${a.status === 'live' ? 'bg-green-900 text-green-300' : 'bg-gray-700 text-gray-300'}`}>{a.status}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          ))}
         </div>
       </div>
+
+      {/* Processes */}
+      <div className="card p-5">
+        <div className="flex items-center justify-between mb-4">
+          <div className="section-title" style={{ marginBottom: 0 }}>Processes</div>
+          <span className="badge" style={{ background: '#a855f720', color: '#a855f7', border: '1px solid #a855f730' }}>
+            {processes.length} tracked
+          </span>
+        </div>
+        {loading ? (
+          <div className="space-y-2">
+            {[1, 2, 3].map(i => <div key={i} className="skeleton h-12 w-full rounded-lg" />)}
+          </div>
+        ) : processes.length === 0 ? (
+          <div className="py-8 text-center text-[var(--text-muted)] text-sm">
+            No processes yet — add to processes table in Supabase
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {processes.map(p => (
+              <div key={p.id} className="flex items-center justify-between p-3 rounded-lg"
+                style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)' }}>
+                <div>
+                  <p className="text-sm font-semibold text-[var(--text-primary)]">{p.name}</p>
+                  <p className="text-xs text-[var(--text-muted)]">{p.description}</p>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  {p.owner && <span className="text-xs text-[var(--text-muted)]">{p.owner}</span>}
+                  <span className="badge" style={{ background: '#a855f720', color: '#a855f7', border: '1px solid #a855f730' }}>
+                    {p.status}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* API Integrations */}
+      <div className="card p-5">
+        <div className="flex items-center justify-between mb-4">
+          <div className="section-title" style={{ marginBottom: 0 }}>API Integrations</div>
+          <a href="/apis" className="text-xs text-[var(--accent-blue)] hover:underline">View all APIs →</a>
+        </div>
+        {loading ? (
+          <div className="space-y-2">
+            {[1, 2].map(i => <div key={i} className="skeleton h-12 w-full rounded-lg" />)}
+          </div>
+        ) : apis.length === 0 ? (
+          <div className="py-8 text-center text-[var(--text-muted)] text-sm">
+            No API integrations tracked — see /apis for full list
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {apis.map(a => (
+              <div key={a.id} className="flex items-center justify-between p-3 rounded-lg"
+                style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)' }}>
+                <div>
+                  <p className="text-sm font-semibold text-[var(--text-primary)]">{a.name}</p>
+                  <p className="text-xs text-[var(--text-muted)]">{a.purpose}</p>
+                </div>
+                <span className="badge" style={{
+                  background: a.status === 'live' ? '#10b98120' : '#52525b20',
+                  color: a.status === 'live' ? '#10b981' : '#52525b',
+                  border: a.status === 'live' ? '#10b98130' : '#27272a',
+                }}>
+                  {a.status}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
     </div>
   );
 }

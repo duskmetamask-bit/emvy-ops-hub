@@ -1,64 +1,157 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase';
+
+const COVERED = [
+  'Agent monitoring and health checks',
+  'Prompt tweaks and refinement',
+  'New minor automations (within scope)',
+  'Bug fixes and error resolution',
+  'Uptime monitoring and alerting',
+  'Monthly performance review',
+];
+
+const NOT_COVERED = [
+  'New feature development',
+  'Infrastructure hosting costs',
+  'Third-party API costs',
+  'Out-of-scope integrations',
+  'Data migration projects',
+  'Mobile app development',
+];
+
+const RESPONSE_TIMES = [
+  { level: 'Critical', time: '< 2 hours', color: '#ef4444' },
+  { level: 'High', time: '< 4 hours', color: '#f59e0b' },
+  { level: 'Normal', time: '< 1 business day', color: '#10b981' },
+  { level: 'Low', time: '< 3 business days', color: '#6366f1' },
+];
+
+interface RetainerClient {
+  id: string;
+  client: string;
+  status: string;
+  monthly_retainer: number;
+  started_at: string;
+}
+
 export default function MaintainPage() {
+  const [clients, setClients] = useState<RetainerClient[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const { data } = await supabase.from('leads').select('*').eq('stage', 'DONE').order('created_at', { ascending: false });
+        setClients(data || []);
+      } catch { /* silent */ } finally { setLoading(false); }
+    };
+    load();
+  }, []);
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-white mb-1">Maintain</h1>
-        <p className="text-gray-400 text-sm">Retainer · Ongoing · Support</p>
+    <div className="space-y-6 fade-in">
+
+      {/* Header */}
+      <div className="page-header">
+        <h1 className="page-title">Maintain</h1>
+        <p className="page-subtitle">$1,500/month · Retainer · Ongoing AI support</p>
       </div>
 
-      <div className="grid gap-4">
-        <div className="bg-gray-900 rounded-xl p-6 border border-gray-700">
-          <h2 className="text-lg font-semibold text-white mb-4">Retainer Overview</h2>
-          <div className="space-y-3">
-            <div className="flex justify-between items-center p-3 bg-gray-800 rounded-lg">
-              <span className="text-gray-400">Monthly Retainer</span>
-              <span className="text-white font-semibold">$1,500/month</span>
+      {/* Pricing */}
+      <div className="card p-5">
+        <div className="grid grid-cols-4 divide-x divide-[var(--border)]">
+          {[
+            { label: 'Monthly Retainer', value: '$1,500', accent: '#06b6d4' },
+            { label: 'Included Hours', value: '10–15 hrs', accent: '#06b6d4' },
+            { label: 'Billing', value: 'Monthly advance', accent: '#6366f1' },
+            { label: 'Contract', value: 'Monthly rolling', accent: '#a855f7' },
+          ].map(item => (
+            <div key={item.label} className="px-6 first:pl-0 text-center">
+              <div className="text-sm font-bold" style={{ color: item.accent }}>{item.value}</div>
+              <div className="text-xs text-[var(--text-muted)] mt-1">{item.label}</div>
             </div>
-            <div className="flex justify-between items-center p-3 bg-gray-800 rounded-lg">
-              <span className="text-gray-400">Included Hours</span>
-              <span className="text-white">10–15 hrs/month</span>
-            </div>
-            <div className="flex justify-between items-center p-3 bg-gray-800 rounded-lg">
-              <span className="text-gray-400">Billing</span>
-              <span className="text-white">Monthly advance</span>
-            </div>
-            <div className="flex justify-between items-center p-3 bg-gray-800 rounded-lg">
-              <span className="text-gray-400">Covers</span>
-              <span className="text-white">Agent monitoring, tweaks, new automations</span>
-            </div>
-          </div>
+          ))}
         </div>
+      </div>
 
-        <div className="bg-gray-900 rounded-xl p-6 border border-gray-700">
-          <h2 className="text-lg font-semibold text-white mb-4">Active Retainers</h2>
-          <div className="text-center py-8 text-gray-500">
-            <p className="text-sm">No active retainers yet</p>
-            <p className="text-xs text-gray-600 mt-1">Track retainer clients here once signed</p>
-          </div>
+      {/* Response Times */}
+      <div className="card p-5">
+        <div className="section-title">Response Times</div>
+        <div className="mt-4 grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {RESPONSE_TIMES.map(r => (
+            <div key={r.level} className="flex items-center gap-3 p-3 rounded-lg"
+              style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)' }}>
+              <div className="w-2 h-2 rounded-full shrink-0" style={{ background: r.color }} />
+              <div>
+                <p className="text-xs font-semibold text-[var(--text-primary)]">{r.level}</p>
+                <p className="text-[10px] text-[var(--text-muted)]">{r.time}</p>
+              </div>
+            </div>
+          ))}
         </div>
+      </div>
 
-        <div className="bg-gray-900 rounded-xl p-6 border border-gray-700">
-          <h2 className="text-lg font-semibold text-white mb-4">Process</h2>
-          <div className="space-y-3">
-            {[
-              { step: '1', name: 'Handover', desc: 'Build complete → move client to retainer' },
-              { step: '2', name: 'Monthly Check-in', desc: 'Review agent performance, log issues, plan additions' },
-              { step: '3', name: 'Invoice', desc: 'Send invoice start of month, track in Supabase' },
-              { step: '4', name: 'Renew / Exit', desc: 'Review quarterly — renew or transition off' },
-            ].map(s => (
-              <div key={s.step} className="flex gap-4 p-3 bg-gray-800 rounded-lg">
-                <span className="w-7 h-7 bg-green-600 text-white text-sm rounded-full flex items-center justify-center shrink-0">{s.step}</span>
+      {/* What's Covered */}
+      <div className="card p-5">
+        <div className="section-title">What is Covered</div>
+        <div className="mt-4 space-y-2">
+          {COVERED.map(item => (
+            <div key={item} className="flex items-center gap-3 p-2.5 rounded-lg"
+              style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)' }}>
+              <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: '#10b981' }} />
+              <span className="text-sm text-[var(--text-secondary)]">{item}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* What's Not Covered */}
+      <div className="card p-5">
+        <div className="section-title">Not Covered</div>
+        <div className="mt-4 space-y-2">
+          {NOT_COVERED.map(item => (
+            <div key={item} className="flex items-center gap-3 p-2.5 rounded-lg"
+              style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)' }}>
+              <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: '#ef4444' }} />
+              <span className="text-sm text-[var(--text-muted)]">{item}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Active Retainers */}
+      <div className="card p-5">
+        <div className="section-title">Active Retainers</div>
+        {loading ? (
+          <div className="space-y-2 mt-4">
+            {[1, 2].map(i => <div key={i} className="skeleton h-12 w-full rounded-lg" />)}
+          </div>
+        ) : clients.length === 0 ? (
+          <div className="py-8 text-center text-[var(--text-muted)] text-sm">
+            No active retainers yet — build clients transition here after go-live
+          </div>
+        ) : (
+          <div className="space-y-2 mt-4">
+            {clients.map(c => (
+              <div key={c.id} className="flex items-center justify-between p-3 rounded-lg"
+                style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)' }}>
                 <div>
-                  <p className="text-white font-medium">{s.name}</p>
-                  <p className="text-gray-400 text-xs">{s.desc}</p>
+                  <p className="text-sm font-medium text-[var(--text-primary)]">{c.client}</p>
+                  <p className="text-xs text-[var(--text-muted)]">
+                    ${c.monthly_retainer || 1500}/month · Since {new Date(c.started_at).toLocaleDateString('en-AU')}
+                  </p>
                 </div>
+                <span className="badge" style={{ background: '#06b6d420', color: '#06b6d4', border: '1px solid #06b6d430' }}>
+                  Active
+                </span>
               </div>
             ))}
           </div>
-        </div>
+        )}
       </div>
+
     </div>
   );
 }

@@ -1,216 +1,200 @@
 'use client';
 
-import type { InfrastructureItem, Blocker } from '@/lib/types';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase';
+
+interface InfrastructureItem {
+  id: string;
+  name: string;
+  category: string;
+  status: string;
+  url?: string;
+  cost?: string;
+  notes?: string;
+}
 
 const INFRA: InfrastructureItem[] = [
-  // Domain
-  { id: 'i1', name: 'emvy.ai', category: 'domain', status: 'needed', cost: '~$50/yr', notes: 'Buy from Porkbun tonight' },
-  // Website
+  { id: 'i1', name: 'emvy.ai', category: 'domain', status: 'needed', cost: '~$50/yr', notes: 'Buy from Porkbun — DNS setup pending' },
   { id: 'i2', name: 'emvyai.vercel.app', category: 'website', status: 'live', url: 'https://emvyai.vercel.app' },
   { id: 'i3', name: 'emvy.ai → Vercel redirect', category: 'website', status: 'blocked', notes: 'Waiting on emvy.ai domain' },
-  // Analytics
-  { id: 'i4', name: 'GA4', category: 'analytics', status: 'needed' },
+  { id: 'i4', name: 'GA4', category: 'analytics', status: 'needed', notes: 'Need G-XXXXXXXXXX measurement ID' },
   { id: 'i5', name: 'Vercel Analytics', category: 'analytics', status: 'needed', notes: 'Free in Vercel dashboard' },
   { id: 'i6', name: 'Microsoft Clarity', category: 'analytics', status: 'needed' },
-  // CRM / Outreach
   { id: 'i7', name: 'Supabase (leads + data)', category: 'crm', status: 'live', url: 'https://supabase.com/dashboard' },
-  { id: 'i8', name: 'Gmail SMTP (outreach)', category: 'outreach', status: 'live', notes: 'dawnlabsai@gmail.com' },
-  { id: 'i9', name: 'CAL.com (booking)', category: 'outreach', status: 'live', url: 'https://cal.com/jake-emvy/15-min-ai-chat' },
+  { id: 'i8', name: 'Gmail SMTP', category: 'outreach', status: 'live', notes: 'dawnlabsai@gmail.com' },
+  { id: 'i9', name: 'CAL.com', category: 'outreach', status: 'live', url: 'https://cal.com/jake-emvy/15-min-ai-chat' },
   { id: 'i10', name: 'VAPI (Callie voice)', category: 'outreach', status: 'live' },
   { id: 'i11', name: 'X API', category: 'outreach', status: 'live' },
 ];
 
-const BLOCKERS: Blocker[] = [
-  { id: 'b1', item: 'emvy.ai domain', type: 'domain', status: 'waiting_on_dusk', notes: 'Buy from Porkbun tonight' },
+const BLOCKERS = [
+  { id: 'b1', item: 'emvy.ai domain purchase', type: 'domain', status: 'waiting_on_dusk', notes: 'Buy from Porkbun tonight' },
   { id: 'b2', item: 'Exa API key', type: 'api', status: 'waiting_on_external', notes: 'Fallback search — optional' },
-  { id: 'b3', item: 'Hunter API key', type: 'api', status: 'waiting_on_external', notes: '$49/mo — optional, manual enrich works for now' },
-  { id: 'b4', item: 'Lead Finder → Supabase sync', type: 'integration', status: 'in_progress', notes: 'Cron writes to pipeline.json, not Supabase. Needs fixing.' },
+  { id: 'b3', item: 'Hunter API key', type: 'api', status: 'waiting_on_external', notes: '$49/mo — optional' },
+  { id: 'b4', item: 'Lead Finder → Supabase sync', type: 'integration', status: 'in_progress', notes: 'Cron writes to pipeline.json, not Supabase' },
   { id: 'b5', item: 'GA4 on site', type: 'analytics', status: 'waiting_on_dusk', notes: 'Need G-XXXXXXXXXX measurement ID' },
   { id: 'b6', item: 'Ops Hub → Supabase write', type: 'integration', status: 'in_progress', notes: 'Dashboard read-only. Need anon JWT key.' },
 ];
 
-const STATUS_COLORS: Record<string, string> = {
-  live: 'text-green-400 bg-green-500 bg-opacity-20',
-  in_progress: 'text-blue-400 bg-blue-500 bg-opacity-20',
-  needed: 'text-yellow-400 bg-yellow-500 bg-opacity-20',
-  blocked: 'text-red-400 bg-red-500 bg-opacity-20',
+const CRONS = [
+  { job: 'AI Opportunities Research', schedule: 'Midnight daily', last_run: '—', status: 'Active' },
+  { job: 'Lead Finder', schedule: '9AM Mon–Thu', last_run: '2026-04-29 09:19', status: 'OK' },
+  { job: 'Content Pipeline', schedule: '8AM Mon–Fri', last_run: '—', status: 'Active' },
+  { job: 'Competitor Intelligence', schedule: '9AM daily', last_run: '2026-04-29 11:43', status: 'OK' },
+  { job: 'Reply Detector', schedule: '9/11/1/3/5PM M–F', last_run: '2026-04-29 17:02', status: 'OK' },
+  { job: 'Pipeline Health', schedule: '8AM Mondays', last_run: '—', status: 'Active' },
+  { job: 'Session Snapshot', schedule: 'Every 30 min', last_run: '2026-04-29 21:00', status: 'OK' },
+];
+
+const STATUS_STYLES: Record<string, { color: string; bg: string }> = {
+  live:     { color: '#10b981', bg: '#10b98120' },
+  needed:   { color: '#f59e0b', bg: '#f59e0b20' },
+  blocked:  { color: '#ef4444', bg: '#ef444420' },
+  in_progress: { color: '#3b82f6', bg: '#3b82f620' },
 };
 
-const STATUS_LABELS: Record<string, string> = {
-  live: 'Live',
-  in_progress: 'In Progress',
-  needed: 'Needed',
-  blocked: 'Blocked',
+const BLOCKER_STATUS_STYLES: Record<string, { color: string; bg: string }> = {
+  waiting_on_dusk:      { color: '#ef4444', bg: '#ef444420' },
+  waiting_on_external:  { color: '#f59e0b', bg: '#f59e0b20' },
+  in_progress:         { color: '#3b82f6', bg: '#3b82f620' },
 };
 
 export default function InfrastructurePage() {
-  const liveCount = INFRA.filter(i => i.status === 'live').length;
-  const blockerCount = BLOCKERS.length;
+  const [items, setItems] = useState(INFRA);
+  const [blockers, setBlockers] = useState(BLOCKERS);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const { data } = await supabase.from('infrastructure_items').select('*').order('name', { ascending: true });
+        if (data && data.length > 0) setItems(data as InfrastructureItem[]);
+      } catch { /* silent */ } finally { setLoading(false); }
+    };
+    load();
+  }, []);
+
+  const liveCount = items.filter(i => i.status === 'live').length;
+  const neededCount = items.filter(i => i.status === 'needed').length;
+  const blockerCount = blockers.length;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 fade-in">
+
+      {/* Header */}
+      <div className="page-header">
+        <h1 className="page-title">Infrastructure</h1>
+        <p className="page-subtitle">Deployed apps · Servers · Integrations</p>
+      </div>
+
       {/* Summary */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="bg-gray-900 rounded-lg p-3 text-center">
-          <div className="text-2xl font-bold text-green-400">{liveCount}</div>
-          <div className="text-xs text-gray-400">Live</div>
+        <div className="card p-4 text-center">
+          <div className="text-2xl font-bold" style={{ color: '#10b981' }}>{liveCount}</div>
+          <div className="text-xs text-[var(--text-muted)] mt-1">Live</div>
         </div>
-        <div className="bg-gray-900 rounded-lg p-3 text-center">
-          <div className="text-2xl font-bold text-yellow-400">{INFRA.filter(i => i.status === 'needed').length}</div>
-          <div className="text-xs text-gray-400">Needed</div>
+        <div className="card p-4 text-center">
+          <div className="text-2xl font-bold" style={{ color: '#f59e0b' }}>{neededCount}</div>
+          <div className="text-xs text-[var(--text-muted)] mt-1">Needed</div>
         </div>
-        <div className="bg-gray-900 rounded-lg p-3 text-center">
-          <div className="text-2xl font-bold text-red-400">{blockerCount}</div>
-          <div className="text-xs text-gray-400">Blockers</div>
+        <div className="card p-4 text-center">
+          <div className="text-2xl font-bold" style={{ color: '#ef4444' }}>{blockerCount}</div>
+          <div className="text-xs text-[var(--text-muted)] mt-1">Blockers</div>
         </div>
       </div>
 
-      {/* Live Infrastructure */}
-      <div>
-        <h2 className="text-sm font-medium text-gray-400 mb-3">Infrastructure</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {INFRA.map(item => (
-            <div key={item.id} className="bg-gray-900 rounded-lg p-4 border border-gray-700">
-              <div className="flex items-start justify-between mb-2">
-                <h3 className="font-medium text-sm">{item.name}</h3>
-                <span className={`text-xs px-2 py-0.5 rounded ${STATUS_COLORS[item.status]}`}>
-                  {STATUS_LABELS[item.status]}
-                </span>
-              </div>
-              <div className="flex items-center gap-2 text-xs text-gray-500">
-                <span className="capitalize">{item.category}</span>
-                {item.cost && <span>· {item.cost}</span>}
-              </div>
-              {item.url && (
-                <a href={item.url} target="_blank" rel="noopener noreferrer"
-                  className="text-xs text-blue-400 hover:text-blue-300 mt-1 inline-block">
-                  ↗ {item.url.replace('https://','')}
-                </a>
-              )}
-              {item.notes && <p className="text-xs text-gray-500 mt-1">{item.notes}</p>}
-            </div>
-          ))}
-        </div>
+      {/* Infrastructure */}
+      <div className="card p-5">
+        <div className="section-title">Infrastructure</div>
+        {loading ? (
+          <div className="space-y-2 mt-4">
+            {[1, 2, 3].map(i => <div key={i} className="skeleton h-16 w-full rounded-lg" />)}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+            {items.map(item => {
+              const style = STATUS_STYLES[item.status] || STATUS_STYLES.needed;
+              return (
+                <div key={item.id} className="flex items-start justify-between p-3 rounded-lg"
+                  style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)' }}>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-semibold text-[var(--text-primary)] truncate">{item.name}</p>
+                      <span className="badge shrink-0" style={{ background: style.bg, color: style.color }}>
+                        {item.status}
+                      </span>
+                    </div>
+                    <p className="text-xs text-[var(--text-muted)] capitalize">{item.category}</p>
+                    {item.cost && <p className="text-[10px] text-[var(--text-muted)]">{item.cost}</p>}
+                    {item.notes && <p className="text-xs text-[var(--text-muted)] mt-1">{item.notes}</p>}
+                    {item.url && (
+                      <a href={item.url} target="_blank" rel="noopener noreferrer"
+                        className="text-xs mt-1 inline-block" style={{ color: '#3b82f6' }}>
+                        ↗ {item.url.replace('https://', '')}
+                      </a>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Blockers */}
-      <div>
-        <h2 className="text-sm font-medium text-gray-400 mb-3">Blockers</h2>
-        <div className="space-y-2">
-          {BLOCKERS.map(blocker => (
-            <div key={blocker.id} className="bg-gray-900 rounded-lg p-4 border border-gray-700">
-              <div className="flex items-start justify-between">
+      <div className="card p-5">
+        <div className="section-title">Blockers</div>
+        <div className="space-y-2 mt-4">
+          {blockers.map(b => {
+            const style = BLOCKER_STATUS_STYLES[b.status] || BLOCKER_STATUS_STYLES.in_progress;
+            return (
+              <div key={b.id} className="flex items-start justify-between p-3 rounded-lg"
+                style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)' }}>
                 <div>
-                  <h3 className="font-medium text-sm">{blocker.item}</h3>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    <span className={`px-1.5 py-0.5 rounded text-xs ${
-                      blocker.status === 'waiting_on_dusk' ? 'bg-red-900 text-red-300' :
-                      blocker.status === 'waiting_on_external' ? 'bg-yellow-900 text-yellow-300' :
-                      'bg-blue-900 text-blue-300'
-                    }`}>
-                      {blocker.status.replace(/_/g, ' ')}
+                  <p className="text-sm font-semibold text-[var(--text-primary)]">{b.item}</p>
+                  <p className="text-xs text-[var(--text-muted)] mt-0.5">
+                    <span className="badge mr-2" style={{ background: style.bg, color: style.color }}>
+                      {b.status.replace(/_/g, ' ')}
                     </span>
-                    <span className="ml-2 capitalize">{blocker.type}</span>
+                    <span className="capitalize">{b.type}</span>
                   </p>
-                  {blocker.notes && <p className="text-xs text-gray-400 mt-1">{blocker.notes}</p>}
+                  {b.notes && <p className="text-xs text-[var(--text-muted)] mt-1">{b.notes}</p>}
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
       {/* Cron Jobs */}
-      <div>
-        <h2 className="text-sm font-medium text-gray-400 mb-3">Active Crons (7)</h2>
-        <div className="bg-gray-900 rounded-lg overflow-hidden border border-gray-700">
+      <div className="card p-5">
+        <div className="section-title">Active Crons ({CRONS.length})</div>
+        <div className="mt-4 overflow-hidden rounded-lg" style={{ border: '1px solid var(--border)' }}>
           <table className="w-full text-xs">
             <thead>
-              <tr className="text-left text-gray-400 border-b border-gray-700">
-                <th className="px-3 py-2 font-medium">Job</th>
-                <th className="px-3 py-2 font-medium">Schedule</th>
-                <th className="px-3 py-2 font-medium">Last Run</th>
-                <th className="px-3 py-2 font-medium">Status</th>
+              <tr className="text-left text-[var(--text-muted)]" style={{ background: 'var(--bg-secondary)' }}>
+                <th className="px-4 py-2.5 font-semibold uppercase tracking-wider">Job</th>
+                <th className="px-4 py-2.5 font-semibold uppercase tracking-wider">Schedule</th>
+                <th className="px-4 py-2.5 font-semibold uppercase tracking-wider">Last Run</th>
+                <th className="px-4 py-2.5 font-semibold uppercase tracking-wider">Status</th>
               </tr>
             </thead>
-            <tbody className="text-gray-300">
-              <tr className="border-b border-gray-800">
-                <td className="px-3 py-2">AI Opportunities Research</td>
-                <td className="px-3 py-2 text-gray-500">Midnight daily</td>
-                <td className="px-3 py-2 text-gray-500">—</td>
-                <td className="px-3 py-2"><span className="text-green-400">Active</span></td>
-              </tr>
-              <tr className="border-b border-gray-800">
-                <td className="px-3 py-2">Lead Finder</td>
-                <td className="px-3 py-2 text-gray-500">9AM Mon-Thu</td>
-                <td className="px-3 py-2 text-gray-500">2026-04-29 09:19</td>
-                <td className="px-3 py-2"><span className="text-green-400">OK</span></td>
-              </tr>
-              <tr className="border-b border-gray-800">
-                <td className="px-3 py-2">Content Pipeline</td>
-                <td className="px-3 py-2 text-gray-500">8AM Mon-Fri</td>
-                <td className="px-3 py-2 text-gray-500">—</td>
-                <td className="px-3 py-2"><span className="text-green-400">Active</span></td>
-              </tr>
-              <tr className="border-b border-gray-800">
-                <td className="px-3 py-2">Competitor Intelligence</td>
-                <td className="px-3 py-2 text-gray-500">9AM daily</td>
-                <td className="px-3 py-2 text-gray-500">2026-04-29 11:43</td>
-                <td className="px-3 py-2"><span className="text-green-400">OK</span></td>
-              </tr>
-              <tr className="border-b border-gray-800">
-                <td className="px-3 py-2">Reply Detector</td>
-                <td className="px-3 py-2 text-gray-500">9/11/1/3/5PM M-F</td>
-                <td className="px-3 py-2 text-gray-500">2026-04-29 17:02</td>
-                <td className="px-3 py-2"><span className="text-green-400">OK</span></td>
-              </tr>
-              <tr className="border-b border-gray-800">
-                <td className="px-3 py-2">Pipeline Health</td>
-                <td className="px-3 py-2 text-gray-500">8AM Mondays</td>
-                <td className="px-3 py-2 text-gray-500">—</td>
-                <td className="px-3 py-2"><span className="text-green-400">Active</span></td>
-              </tr>
-              <tr className="border-b border-gray-800">
-                <td className="px-3 py-2">Session Snapshot</td>
-                <td className="px-3 py-2 text-gray-500">Every 30 min</td>
-                <td className="px-3 py-2 text-gray-500">2026-04-29 21:00</td>
-                <td className="px-3 py-2"><span className="text-green-400">OK</span></td>
-              </tr>
+            <tbody>
+              {CRONS.map((cron, i) => (
+                <tr key={i} className="border-t" style={{ borderColor: 'var(--border)' }}>
+                  <td className="px-4 py-2.5 text-[var(--text-primary)]">{cron.job}</td>
+                  <td className="px-4 py-2.5 text-[var(--text-muted)]">{cron.schedule}</td>
+                  <td className="px-4 py-2.5 text-[var(--text-muted)] font-mono">{cron.last_run}</td>
+                  <td className="px-4 py-2.5">
+                    <span style={{ color: '#10b981' }}>{cron.status}</span>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* API Keys / Credentials */}
-      <div>
-        <h2 className="text-sm font-medium text-gray-400 mb-3">Credentials Status</h2>
-        <div className="bg-gray-900 rounded-lg p-4 border border-gray-700 text-xs space-y-2">
-          <div className="flex justify-between">
-            <span className="text-gray-400">Gmail SMTP</span>
-            <span className="text-green-400">Live (dawnlabsai@gmail.com)</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-400">CAL API</span>
-            <span className="text-green-400">Live</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-400">VAPI (Callie)</span>
-            <span className="text-green-400">Live</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-400">X API</span>
-            <span className="text-green-400">Live</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-400">NVIDIA API</span>
-            <span className="text-green-400">Live</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-400">Supabase</span>
-            <span className="text-yellow-400">Read-only (anon key missing)</span>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

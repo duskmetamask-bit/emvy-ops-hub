@@ -1,24 +1,19 @@
 'use client';
 
 import { useState } from 'react';
-import type { SeoChecklistItem, ContentPillar } from '@/lib/types';
 
-const CHECKLIST_ITEMS: SeoChecklistItem[] = [
-  // Domain
+const CHECKLIST_ITEMS = [
   { id: 'd1', task: 'Buy emvy.ai from Porkbun', category: 'domain', status: 'todo' },
   { id: 'd2', task: 'Point emvy.ai to Vercel (A record + CNAME)', category: 'domain', status: 'todo' },
   { id: 'd3', task: 'Add emvy.ai to Google Search Console (DNS TXT verification)', category: 'domain', status: 'todo' },
   { id: 'd4', task: 'Add emvyai.vercel.app to Google Search Console (HTML tag)', category: 'domain', status: 'todo' },
   { id: 'd5', task: 'Set up www.emvy.ai redirect to emvy.ai', category: 'domain', status: 'todo' },
-  // Analytics
   { id: 'a1', task: 'GA4 on emvyai.vercel.app', category: 'analytics', status: 'todo' },
   { id: 'a2', task: 'Vercel Analytics enabled', category: 'analytics', status: 'todo' },
   { id: 'a3', task: 'Microsoft Clarity on emvyai.vercel.app', category: 'analytics', status: 'todo' },
-  // Technical
   { id: 't1', task: 'Run PageSpeed Insights on emvyai.vercel.app', category: 'technical', status: 'todo' },
   { id: 't2', task: 'Fix any Core Web Vitals failures (LCP, FID, CLS)', category: 'technical', status: 'todo' },
   { id: 't3', task: 'Submit sitemap to Google Search Console (/sitemap.xml)', category: 'technical', status: 'todo' },
-  // Content
   { id: 'c1', task: 'Set up Carrd ($19/yr) — lead magnet landing page', category: 'content', status: 'todo' },
   { id: 'c2', task: 'Create PDF lead magnet: "The AI Audit Checklist for Perth SMBs"', category: 'content', status: 'todo' },
   { id: 'c3', task: 'Set up email capture on Carrd (Tally or ConvertKit)', category: 'content', status: 'todo' },
@@ -26,7 +21,7 @@ const CHECKLIST_ITEMS: SeoChecklistItem[] = [
   { id: 'c5', task: 'Build emvy-content-pipeline skill v2 (SEO research + Tavily + meta)', category: 'content', status: 'todo' },
 ];
 
-const CONTENT_PILLARS: ContentPillar[] = [
+const CONTENT_PILLARS = [
   {
     id: 'p1',
     name: 'AI Tools Not Working',
@@ -83,16 +78,24 @@ const KEYWORD_OPPORTUNITIES = [
   { keyword: 'AI chatbot for small business Perth', intent: 'Commercial', difficulty: 'Low', priority: 'medium' },
 ];
 
-const PHASE1_DONE = CHECKLIST_ITEMS.filter(i => i.status === 'done').length;
-const PHASE1_TOTAL = CHECKLIST_ITEMS.length;
+const PRIORITY_STYLES: Record<string, { bg: string; color: string }> = {
+  high:   { bg: '#ef444420', color: '#ef4444' },
+  medium: { bg: '#f59e0b20', color: '#f59e0b' },
+};
+
+const STATUS_STYLES: Record<string, { bg: string; color: string }> = {
+  published:   { bg: '#10b98120', color: '#10b981' },
+  in_progress: { bg: '#3b82f620', color: '#3b82f6' },
+  planned:     { bg: '#52525b20', color: '#52525b' },
+};
 
 export default function SeoPage() {
   const [items, setItems] = useState(CHECKLIST_ITEMS);
   const [activeTab, setActiveTab] = useState<'checklist' | 'pillars' | 'keywords'>('checklist');
 
   const toggleItem = (id: string) => {
-    setItems(prev => prev.map(item => 
-      item.id === id 
+    setItems(prev => prev.map(item =>
+      item.id === id
         ? { ...item, status: item.status === 'done' ? 'todo' : 'done' }
         : item
     ));
@@ -100,67 +103,104 @@ export default function SeoPage() {
 
   const categories = ['domain', 'analytics', 'technical', 'content'] as const;
   const categoryLabels = { domain: 'Domain', analytics: 'Analytics', technical: 'Technical', content: 'Content' };
+  const categoryAccents = { domain: '#6366f1', analytics: '#06b6d4', technical: '#a855f7', content: '#f59e0b' };
+
+  const doneCount = items.filter(i => i.status === 'done').length;
+  const totalCount = items.length;
+  const progressPct = Math.round((doneCount / totalCount) * 100);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 fade-in">
+
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-bold">SEO / Content</h2>
-          <p className="text-sm text-gray-400 mt-1">
-            Phase 1 Infrastructure — <span className="text-blue-400">{PHASE1_DONE}/{PHASE1_TOTAL} complete</span>
-          </p>
+      <div className="page-header">
+        <h1 className="page-title">SEO</h1>
+        <p className="page-subtitle">Phase 1 Infrastructure · Content Strategy</p>
+      </div>
+
+      {/* Progress banner */}
+      <div className="card p-5">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <p className="text-sm font-semibold text-[var(--text-primary)]">Phase 1 Progress</p>
+            <p className="text-xs text-[var(--text-muted)]">{doneCount}/{totalCount} tasks complete</p>
+          </div>
+          <div className="text-right">
+            <div className="text-2xl font-bold" style={{ color: '#3b82f6' }}>{progressPct}%</div>
+          </div>
         </div>
-        <div className="text-right">
-          <div className="text-2xl font-bold text-blue-400">{Math.round((PHASE1_DONE/PHASE1_TOTAL)*100)}%</div>
-          <div className="text-xs text-gray-500">Phase 1 Done</div>
+        <div className="pipeline-bar">
+          <div className="pipeline-bar-fill" style={{ width: `${progressPct}%`, background: '#3b82f6' }} />
         </div>
       </div>
 
-      {/* Trigger Banner */}
-      <div className="bg-amber-900 border border-amber-700 rounded-lg p-4 text-sm">
-        <p className="text-amber-200 font-medium">Activation Trigger</p>
-        <p className="text-amber-300 mt-1">Activate SEO when: 3+ consistent clients + outbound running without daily mgmt + calendar full</p>
+      {/* Activation trigger */}
+      <div className="card p-4" style={{ borderColor: '#f59e0b30', background: '#f59e0b10' }}>
+        <div className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#f59e0b' }}>Activation Trigger</div>
+        <p className="text-sm text-[var(--text-secondary)] mt-1">
+          Activate SEO when: 3+ consistent clients + outbound running without daily management + calendar full
+        </p>
       </div>
 
       {/* Tabs */}
       <div className="flex gap-2">
-        {(['checklist','pillars','keywords'] as const).map(tab => (
+        {([
+          ['checklist', 'Phase 1 Checklist'],
+          ['pillars', 'Content Pillars'],
+          ['keywords', 'Keywords'],
+        ] as const).map(([tab, label]) => (
           <button key={tab} onClick={() => setActiveTab(tab)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium capitalize transition-colors ${
-              activeTab === tab ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-            }`}>
-            {tab === 'pillars' ? 'Content Pillars' : tab === 'keywords' ? 'Keywords' : 'Phase 1 Checklist'}
+            className="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+            style={{
+              background: activeTab === tab ? '#3b82f6' : 'var(--bg-secondary)',
+              color: activeTab === tab ? '#fff' : 'var(--text-muted)',
+              border: activeTab === tab ? 'none' : '1px solid var(--border)',
+            }}>
+            {label}
           </button>
         ))}
       </div>
 
-      {/* Checklist Tab */}
+      {/* Checklist */}
       {activeTab === 'checklist' && (
-        <div className="space-y-6">
+        <div className="space-y-5">
           {categories.map(cat => {
             const catItems = items.filter(i => i.category === cat);
             const catDone = catItems.filter(i => i.status === 'done').length;
+            const accent = categoryAccents[cat];
             return (
               <div key={cat}>
-                <h3 className="text-sm font-medium text-gray-300 mb-2 flex items-center justify-between">
-                  <span>{categoryLabels[cat]}</span>
-                  <span className="text-gray-500 text-xs">{catDone}/{catItems.length}</span>
-                </h3>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full" style={{ background: accent }} />
+                    <span className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">{categoryLabels[cat]}</span>
+                  </div>
+                  <span className="text-xs font-mono text-[var(--text-muted)]">{catDone}/{catItems.length}</span>
+                </div>
                 <div className="space-y-1">
                   {catItems.map(item => (
                     <button key={item.id} onClick={() => toggleItem(item.id)}
-                      className={`w-full text-left px-4 py-2.5 rounded-lg border transition-all flex items-center gap-3 ${
-                        item.status === 'done' 
-                          ? 'bg-gray-800 border-gray-700 opacity-60' 
-                          : 'bg-gray-900 border-gray-700 hover:border-gray-600'
-                      }`}>
-                      <span className={`w-4 h-4 rounded border flex-shrink-0 flex items-center justify-center ${
-                        item.status === 'done' ? 'bg-green-500 border-green-500' : 'border-gray-600'
-                      }`}>
-                        {item.status === 'done' && <span className="text-white text-xs">✓</span>}
+                      className="w-full text-left flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all"
+                      style={{
+                        background: 'var(--bg-secondary)',
+                        border: '1px solid var(--border)',
+                        opacity: item.status === 'done' ? 0.5 : 1,
+                      }}>
+                      <span className="w-4 h-4 rounded border shrink-0 flex items-center justify-center"
+                        style={{
+                          background: item.status === 'done' ? '#10b981' : 'transparent',
+                          borderColor: item.status === 'done' ? '#10b981' : 'var(--border-glow)',
+                        }}>
+                        {item.status === 'done' && (
+                          <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                            <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        )}
                       </span>
-                      <span className={`text-sm ${item.status === 'done' ? 'line-through text-gray-500' : 'text-gray-200'}`}>
+                      <span className="text-sm" style={{
+                        color: item.status === 'done' ? 'var(--text-muted)' : 'var(--text-primary)',
+                        textDecoration: item.status === 'done' ? 'line-through' : 'none',
+                      }}>
                         {item.task}
                       </span>
                     </button>
@@ -172,96 +212,98 @@ export default function SeoPage() {
         </div>
       )}
 
-      {/* Content Pillars Tab */}
+      {/* Content Pillars */}
       {activeTab === 'pillars' && (
         <div className="space-y-4">
-          {CONTENT_PILLARS.map(pillar => (
-            <div key={pillar.id} className="bg-gray-900 rounded-lg p-5 border border-gray-700">
-              <div className="flex items-start justify-between mb-3">
-                <div>
-                  <h3 className="font-bold text-lg">{pillar.name}</h3>
-                  <div className="flex gap-2 mt-1">
-                    <span className={`text-xs px-2 py-0.5 rounded font-medium ${
-                      pillar.priority === 'high' ? 'bg-red-900 text-red-300' : 'bg-gray-700 text-gray-300'
-                    }`}>
-                      {pillar.priority.toUpperCase()}
-                    </span>
-                    <span className={`text-xs px-2 py-0.5 rounded ${
-                      pillar.status === 'published' ? 'bg-green-900 text-green-300' :
-                      pillar.status === 'in_progress' ? 'bg-blue-900 text-blue-300' :
-                      'bg-gray-700 text-gray-400'
-                    }`}>
-                      {pillar.status}
-                    </span>
+          {CONTENT_PILLARS.map(pillar => {
+            const pStyle = PRIORITY_STYLES[pillar.priority] || PRIORITY_STYLES.medium;
+            const sStyle = STATUS_STYLES[pillar.status] || STATUS_STYLES.planned;
+            return (
+              <div key={pillar.id} className="card p-5">
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <p className="text-sm font-bold text-[var(--text-primary)]">{pillar.name}</p>
+                    <div className="flex gap-2 mt-2">
+                      <span className="badge" style={{ background: pStyle.bg, color: pStyle.color }}>
+                        {pillar.priority.toUpperCase()}
+                      </span>
+                      <span className="badge" style={{ background: sStyle.bg, color: sStyle.color }}>
+                        {pillar.status.replace('_', ' ')}
+                      </span>
+                    </div>
                   </div>
                 </div>
+                <ul className="space-y-1.5">
+                  {pillar.topics.map((topic, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm text-[var(--text-secondary)]">
+                      <span style={{ color: '#3b82f6' }} className="mt-0.5">→</span>
+                      <span>{topic}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
-              <ul className="space-y-1.5">
-                {pillar.topics.map((topic, i) => (
-                  <li key={i} className="text-sm text-gray-400 flex items-start gap-2">
-                    <span className="text-blue-400 mt-0.5">→</span>
-                    <span>{topic}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
-      {/* Keywords Tab */}
+      {/* Keywords */}
       {activeTab === 'keywords' && (
-        <div className="bg-gray-900 rounded-lg overflow-hidden border border-gray-700">
-          <table className="w-full text-sm">
+        <div className="card overflow-hidden">
+          <table className="w-full text-xs">
             <thead>
-              <tr className="text-left text-gray-400 border-b border-gray-700">
-                <th className="px-4 py-3 font-medium">Keyword</th>
-                <th className="px-4 py-3 font-medium">Intent</th>
-                <th className="px-4 py-3 font-medium">Difficulty</th>
-                <th className="px-4 py-3 font-medium">Priority</th>
+              <tr className="text-left text-[var(--text-muted)]" style={{ background: 'var(--bg-secondary)' }}>
+                <th className="px-4 py-2.5 font-semibold uppercase tracking-wider">Keyword</th>
+                <th className="px-4 py-2.5 font-semibold uppercase tracking-wider">Intent</th>
+                <th className="px-4 py-2.5 font-semibold uppercase tracking-wider">Difficulty</th>
+                <th className="px-4 py-2.5 font-semibold uppercase tracking-wider">Priority</th>
               </tr>
             </thead>
             <tbody>
-              {KEYWORD_OPPORTUNITIES.map((kw, i) => (
-                <tr key={i} className="border-b border-gray-800 last:border-0">
-                  <td className="px-4 py-3 text-gray-200 font-mono text-xs">{kw.keyword}</td>
-                  <td className="px-4 py-3 text-gray-400 text-xs">{kw.intent}</td>
-                  <td className="px-4 py-3">
-                    <span className={`text-xs px-2 py-0.5 rounded ${
-                      kw.difficulty === 'Low' ? 'bg-green-900 text-green-300' : 'bg-yellow-900 text-yellow-300'
-                    }`}>{kw.difficulty}</span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className={`text-xs px-2 py-0.5 rounded ${
-                      kw.priority === 'high' ? 'bg-red-900 text-red-300' : 'bg-gray-700 text-gray-300'
-                    }`}>{kw.priority}</span>
-                  </td>
-                </tr>
-              ))}
+              {KEYWORD_OPPORTUNITIES.map((kw, i) => {
+                const dStyle = kw.difficulty === 'Low' ? { bg: '#10b98120', color: '#10b981' } : { bg: '#f59e0b20', color: '#f59e0b' };
+                const pStyle = PRIORITY_STYLES[kw.priority] || PRIORITY_STYLES.medium;
+                return (
+                  <tr key={i} className="border-t" style={{ borderColor: 'var(--border)' }}>
+                    <td className="px-4 py-2.5 font-mono text-[var(--text-primary)]">{kw.keyword}</td>
+                    <td className="px-4 py-2.5 text-[var(--text-muted)]">{kw.intent}</td>
+                    <td className="px-4 py-2.5">
+                      <span className="badge" style={{ background: dStyle.bg, color: dStyle.color }}>{kw.difficulty}</span>
+                    </td>
+                    <td className="px-4 py-2.5">
+                      <span className="badge" style={{ background: pStyle.bg, color: pStyle.color }}>{kw.priority}</span>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
       )}
 
       {/* Distribution */}
-      <div className="bg-gray-900 rounded-lg p-4 border border-gray-700">
-        <h3 className="font-medium text-gray-300 mb-3">Distribution (when active)</h3>
-        <div className="grid grid-cols-2 gap-3 text-xs">
-          <div className="space-y-1">
-            <p className="text-gray-500">Free</p>
-            <p className="text-gray-300">• LinkedIn (Dusk's personal profile)</p>
-            <p className="text-gray-300">• Reddit (r/smallbusiness, r/entrepreneur)</p>
-            <p className="text-gray-300">• Email warm pipeline leads</p>
-            <p className="text-gray-300">• Google Business Profile</p>
+      <div className="card p-5">
+        <div className="section-title">Distribution (when active)</div>
+        <div className="grid grid-cols-2 gap-4 mt-4">
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-muted)] mb-2">Free</p>
+            <div className="space-y-1.5">
+              {['LinkedIn (Dusk\'s personal profile)', 'Reddit (r/smallbusiness, r/entrepreneur)', 'Email warm pipeline leads', 'Google Business Profile'].map(item => (
+                <p key={item} className="text-xs text-[var(--text-secondary)]">— {item}</p>
+              ))}
+            </div>
           </div>
-          <div className="space-y-1">
-            <p className="text-gray-500">Paid (when budget)</p>
-            <p className="text-gray-300">• LinkedIn Sponsored $10-50/day</p>
-            <p className="text-gray-300">• Google Ads $10-30/day</p>
-            <p className="text-gray-300">• Perth business newsletters</p>
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-muted)] mb-2">Paid (when budget)</p>
+            <div className="space-y-1.5">
+              {['LinkedIn Sponsored $10–50/day', 'Google Ads $10–30/day', 'Perth business newsletters'].map(item => (
+                <p key={item} className="text-xs text-[var(--text-secondary)]">— {item}</p>
+              ))}
+            </div>
           </div>
         </div>
       </div>
+
     </div>
   );
 }
