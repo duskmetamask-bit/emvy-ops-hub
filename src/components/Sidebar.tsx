@@ -4,99 +4,88 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 const PROCESS_FLOW = [
-  { href: '/leads', label: 'Leads' },
-  { href: '/discovery', label: 'Discovery' },
-  { href: '/audit', label: 'Audit' },
-  { href: '/build', label: 'Build' },
-  { href: '/maintain', label: 'Maintain' },
+  { href: '/leads',     label: 'Leads',     accent: '#3b82f6' },
+  { href: '/discovery', label: 'Discovery', accent: '#f97316' },
+  { href: '/audit',     label: 'Audit',     accent: '#f59e0b' },
+  { href: '/build',     label: 'Build',     accent: '#10b981' },
+  { href: '/maintain',  label: 'Maintain',  accent: '#06b6d4' },
 ];
 
 const BUSINESS = [
-  { href: '/business', label: 'Business' },
-  { href: '/operating', label: 'Operating' },
+  { href: '/business',    label: 'Business',    accent: '#6366f1' },
+  { href: '/operating',  label: 'Operating',   accent: '#a855f7' },
 ];
 
 const TOOLS = [
-  { href: '/apis', label: 'APIs' },
-  { href: '/infrastructure', label: 'Infra' },
-  { href: '/actions', label: 'Actions' },
-  { href: '/seo', label: 'SEO' },
+  { href: '/actions',       label: 'Actions',   accent: '#22c55e' },
+  { href: '/apis',          label: 'APIs',     accent: '#52525b' },
+  { href: '/infrastructure',label: 'Infra',     accent: '#52525b' },
+  { href: '/seo',           label: 'SEO',      accent: '#52525b' },
 ];
 
-export default function Sidebar() {
+function NavGroup({ title, items }: { title: string; items: typeof PROCESS_FLOW }) {
   const pathname = usePathname();
-
-  const isActive = (href: string) =>
-    pathname === href || pathname.startsWith(href + '/');
+  const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/');
 
   return (
-    <aside className="w-56 bg-gray-900 border-r border-gray-800 flex flex-col shrink-0">
+    <div className="px-3">
+      <p className="text-[9px] font-bold text-[var(--text-muted)] uppercase tracking-widest px-2 mb-1.5">{title}</p>
+      <nav className="space-y-0.5">
+        {items.map(({ href, label, accent }) => {
+          const active = isActive(href);
+          return (
+            <Link key={href} href={href}
+              className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all"
+              style={{
+                background:  active ? `${accent}18` : 'transparent',
+                color:      active ? accent : 'var(--text-muted)',
+                borderLeft: active ? `2px solid ${accent}` : '2px solid transparent',
+              }}>
+              {label}
+            </Link>
+          );
+        })}
+      </nav>
+    </div>
+  );
+}
+
+export default function Sidebar() {
+  return (
+    <aside style={{ width: '220px', background: 'var(--bg-secondary)', borderRight: '1px solid var(--border)' }}
+      className="flex flex-col shrink-0">
+
       {/* Logo */}
-      <div className="px-5 py-5 border-b border-gray-800">
-        <div className="flex items-center gap-2.5">
+      <div className="px-5 py-5" style={{ borderBottom: '1px solid var(--border)' }}>
+        <div className="flex items-center gap-3">
+          <div style={{ width: 28, height: 28, background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)', borderRadius: 8 }}
+               className="flex items-center justify-center shrink-0">
+            <span className="text-white font-black text-xs">E</span>
+          </div>
           <div>
-            <h1 className="text-lg font-bold text-white leading-none">EMVY</h1>
-            <p className="text-[10px] text-gray-500 uppercase tracking-wider mt-0.5">Ops Dashboard</p>
+            <h1 className="text-base font-black text-[var(--text-primary)] leading-none tracking-tight">EMVY</h1>
+            <p className="text-[9px] text-[var(--text-muted)] uppercase tracking-widest mt-0.5">Ops Hub</p>
           </div>
         </div>
       </div>
 
-      {/* Process flow */}
-      <div className="px-3 pt-4">
-        <p className="text-[10px] text-gray-600 uppercase tracking-widest px-2 mb-2">Process</p>
-        <nav className="space-y-0.5">
-          {PROCESS_FLOW.map(({ href, label }) => (
-            <Link key={href} href={href}
-              className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                isActive(href)
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-400 hover:text-white hover:bg-gray-800'
-              }`}>
-              {label}
-            </Link>
-          ))}
-        </nav>
+      {/* Nav */}
+      <div className="flex-1 py-4 space-y-5 overflow-y-auto">
+        <NavGroup title="Process" items={PROCESS_FLOW} />
+        <div style={{ borderTop: '1px solid var(--border)', margin: '0 12px' }} />
+        <NavGroup title="Business" items={BUSINESS} />
+        <div style={{ borderTop: '1px solid var(--border)', margin: '0 12px' }} />
+        <NavGroup title="Tools" items={TOOLS} />
       </div>
 
-      {/* Business */}
-      <div className="px-3 pt-4">
-        <p className="text-[10px] text-gray-600 uppercase tracking-widest px-2 mb-2">Business</p>
-        <nav className="space-y-0.5">
-          {BUSINESS.map(({ href, label }) => (
-            <Link key={href} href={href}
-              className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                isActive(href)
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-400 hover:text-white hover:bg-gray-800'
-              }`}>
-              {label}
-            </Link>
-          ))}
-        </nav>
-      </div>
-
-      {/* Tools */}
-      <div className="px-3 pt-4">
-        <p className="text-[10px] text-gray-600 uppercase tracking-widest px-2 mb-2">Tools</p>
-        <nav className="space-y-0.5">
-          {TOOLS.map(({ href, label }) => (
-            <Link key={href} href={href}
-              className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                isActive(href)
-                  ? 'bg-purple-600 text-white'
-                  : 'text-gray-400 hover:text-white hover:bg-gray-800'
-              }`}>
-              {label}
-            </Link>
-          ))}
-        </nav>
-      </div>
-
-      <div className="mt-auto px-5 py-4 border-t border-gray-800">
-        <a href="https://rrjktvvnzjzlfquaghut.supabase.co" target="_blank"
-          className="flex items-center gap-2 text-xs text-gray-500 hover:text-gray-300 transition-colors">
-          Supabase
+      {/* Footer */}
+      <div className="px-5 py-4" style={{ borderTop: '1px solid var(--border)' }}>
+        <a href="https://supabase.com" target="_blank" rel="noopener noreferrer"
+          className="flex items-center gap-2 text-xs text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors">
+          <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+          Supabase connected
         </a>
+        <p className="text-[9px] text-[var(--text-muted)] mt-1.5 opacity-60">callieai project</p>
       </div>
     </aside>
   );

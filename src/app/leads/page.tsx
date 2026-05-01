@@ -21,29 +21,113 @@ interface Lead {
 }
 
 const COLUMNS = [
-  { id: 'DISCOVERED', label: 'Discovered', color: 'border-indigo-500', dot: 'bg-indigo-500', text: 'text-indigo-400' },
-  { id: 'ENRICHED', label: 'Enriched', color: 'border-purple-500', dot: 'bg-purple-500', text: 'text-purple-400' },
-  { id: 'SENT', label: 'Sent', color: 'border-blue-500', dot: 'bg-blue-500', text: 'text-blue-400' },
-  { id: 'REPLY', label: 'Reply', color: 'border-cyan-500', dot: 'bg-cyan-500', text: 'text-cyan-400' },
-  { id: 'CALL', label: 'Call', color: 'border-pink-500', dot: 'bg-pink-500', text: 'text-pink-400' },
-  { id: 'AUDIT', label: 'Audit', color: 'border-amber-500', dot: 'bg-amber-500', text: 'text-amber-400' },
-  { id: 'BUILD', label: 'Build', color: 'border-emerald-500', dot: 'bg-emerald-500', text: 'text-emerald-400' },
-  { id: 'DONE', label: 'Done', color: 'border-green-600', dot: 'bg-green-500', text: 'text-green-400' },
+  { id: 'DISCOVERED', label: 'Discovered', color: '#6366f1', bg: 'bg-indigo-500/10' },
+  { id: 'ENRICHED',   label: 'Enriched',   color: '#a855f7', bg: 'bg-purple-500/10' },
+  { id: 'SENT',       label: 'Sent',       color: '#3b82f6', bg: 'bg-blue-500/10' },
+  { id: 'REPLY',      label: 'Reply',      color: '#06b6d4', bg: 'bg-cyan-500/10' },
+  { id: 'CALL',       label: 'Call',       color: '#ec4899', bg: 'bg-pink-500/10' },
+  { id: 'AUDIT',      label: 'Audit',      color: '#f59e0b', bg: 'bg-amber-500/10' },
+  { id: 'BUILD',      label: 'Build',      color: '#10b981', bg: 'bg-emerald-500/10' },
+  { id: 'DONE',       label: 'Done',       color: '#22c55e', bg: 'bg-green-500/10' },
 ];
 
-const TEMP_DOT: Record<string, string> = {
-  HOT: 'bg-red-500 ring-1 ring-red-400',
-  WARM: 'bg-orange-500',
-  DISCOVERED: 'bg-blue-500',
+const TEMP_STYLE: Record<string, { dot: string; badge: string; label: string }> = {
+  HOT:        { dot: '#ef4444', badge: 'bg-red-500/20 text-red-400 border border-red-500/30',   label: 'Hot' },
+  WARM:       { dot: '#f97316', badge: 'bg-orange-500/20 text-orange-400 border border-orange-500/30', label: 'Warm' },
+  DISCOVERED: { dot: '#6366f1', badge: 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30', label: 'New' },
 };
 
-const SKIP = { id: 'SKIP', label: 'Skipped', color: 'border-gray-600', dot: 'bg-gray-600', text: 'text-gray-500' };
+function SkeletonCard() {
+  return (
+    <div className="card p-3.5 space-y-2">
+      <div className="skeleton h-4 w-3/4" />
+      <div className="skeleton h-3 w-1/2" />
+      <div className="skeleton h-3 w-2/3 mt-2" />
+    </div>
+  );
+}
+
+function LeadModal({ lead, onClose }: { lead: Lead; onClose: () => void }) {
+  const temp = TEMP_STYLE[lead.temp] || TEMP_STYLE.DISCOVERED;
+  const stage = COLUMNS.find(c => c.id === lead.stage) || COLUMNS[0];
+
+  const fields = [
+    lead.email       && { label: 'Email',       value: lead.email,       mono: true },
+    lead.phone       && { label: 'Phone',       value: lead.phone,       mono: true },
+    lead.location    && { label: 'Location',    value: lead.location,   mono: false },
+    lead.industry    && { label: 'Industry',    value: lead.industry,   mono: false },
+    lead.score > 0  && { label: 'Score',       value: `${lead.score}/10`, mono: true },
+    lead.discovery_date && { label: 'Discovered', value: lead.discovery_date, mono: false },
+  ].filter(Boolean) as { label: string; value: string; mono: boolean }[];
+
+  return (
+    <div className="modal-overlay fade-in" onClick={onClose}>
+      <div className="modal-panel" onClick={e => e.stopPropagation()}>
+
+        {/* Header */}
+        <div className="px-6 pt-6 pb-5 border-b border-[var(--border)]">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h2 className="text-lg font-bold text-[var(--text-primary)]">{lead.name}</h2>
+              <p className="text-sm text-[var(--text-secondary)] mt-0.5">{lead.company}</p>
+            </div>
+            <button onClick={onClose} className="text-[var(--text-muted)] hover:text-white text-2xl leading-none transition-colors shrink-0">×</button>
+          </div>
+          <div className="flex items-center gap-2 mt-3 flex-wrap">
+            <span className={`badge ${temp.badge}`}>{temp.label}</span>
+            <span className="badge bg-[var(--bg-secondary)] text-[var(--text-secondary)] border border-[var(--border)]"
+              style={{ borderColor: `${stage.color}30`, color: stage.color }}>
+              {stage.label}
+            </span>
+          </div>
+        </div>
+
+        {/* Pain evidence */}
+        {lead.pain_evidence && (
+          <div className="px-6 py-4 border-b border-[var(--border)]">
+            <div className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-muted)] mb-1.5">Pain Signal</div>
+            <p className="text-sm text-orange-400 leading-relaxed">{lead.pain_evidence}</p>
+          </div>
+        )}
+
+        {/* Fields */}
+        <div className="px-6 py-4 space-y-3">
+          {fields.map(f => (
+            <div key={f.label}>
+              <div className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-muted)] mb-0.5">{f.label}</div>
+              <p className={`text-sm ${f.mono ? 'font-mono text-[var(--text-secondary)]' : 'text-[var(--text-primary)]'}`}>{f.value}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Notes */}
+        {lead.notes && (
+          <div className="px-6 pb-5">
+            <div className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-muted)] mb-1.5">Notes</div>
+            <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{lead.notes}</p>
+          </div>
+        )}
+
+        {/* Footer CTA */}
+        {lead.email && (
+          <div className="px-6 pb-6">
+            <a href={`mailto:${lead.email}`}
+              className="block w-full py-2.5 rounded-lg text-center text-sm font-semibold transition-colors"
+              style={{ background: 'var(--accent-blue)', color: '#fff' }}>
+              Send Email
+            </a>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function LeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState<'ALL' | 'HOT' | 'WARM'>('ALL');
-  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [selected, setSelected] = useState<Lead | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -55,35 +139,40 @@ export default function LeadsPage() {
     load();
   }, []);
 
-  const getByStage = (stage: string) => {
-    let filtered = leads.filter(l => l.stage === stage);
-    if (activeFilter === 'HOT') filtered = filtered.filter(l => l.temp === 'HOT');
-    if (activeFilter === 'WARM') filtered = filtered.filter(l => l.temp === 'WARM');
-    return filtered;
+  const hotCount  = leads.filter(l => l.temp === 'HOT').length;
+  const warmCount = leads.filter(l => l.temp === 'WARM').length;
+
+  const getColLeads = (stage: string) => {
+    let list = leads.filter(l => l.stage === stage);
+    if (activeFilter === 'HOT')  list = list.filter(l => l.temp === 'HOT');
+    if (activeFilter === 'WARM') list = list.filter(l => l.temp === 'WARM');
+    return list;
   };
 
-  const hotCount = leads.filter(l => l.temp === 'HOT').length;
-  const warmCount = leads.filter(l => l.temp === 'WARM').length;
-  const skipCount = leads.filter(l => l.stage === 'SKIP').length;
+  const skipLeads = leads.filter(l => l.stage === 'SKIP');
 
   return (
-    <div className="h-full flex flex-col -m-6">
+    <div className="flex flex-col h-full -m-6">
+
       {/* Page header */}
-      <div className="px-6 py-4 border-b border-gray-800 flex items-center justify-between shrink-0">
+      <div className="px-6 py-4 border-b border-[var(--border)] flex items-center justify-between shrink-0">
         <div>
-          <h1 className="text-xl font-bold text-white">Leads Pipeline</h1>
-          <p className="text-xs text-gray-500 mt-0.5">{leads.length} total · {hotCount} hot · {warmCount} warm</p>
+          <h1 className="text-base font-bold text-[var(--text-primary)]">Leads Pipeline</h1>
+          <p className="text-xs text-[var(--text-muted)] mt-0.5">
+            {leads.length} total
+            {hotCount > 0  && <span className="text-red-400">  ·  {hotCount} hot</span>}
+            {warmCount > 0 && <span className="text-orange-400">  ·  {warmCount} warm</span>}
+          </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           {([['ALL', 'All'], ['HOT', `Hot ${hotCount}`], ['WARM', `Warm ${warmCount}`]] as const).map(([val, label]) => (
             <button key={val} onClick={() => setActiveFilter(val)}
-              className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${
-                activeFilter === val
-                  ? val === 'HOT' ? 'bg-red-900 border-red-700 text-red-300'
-                  : val === 'WARM' ? 'bg-orange-900 border-orange-700 text-orange-300'
-                  : 'bg-blue-600 border-blue-500 text-white'
-                  : 'bg-gray-900 border-gray-700 text-gray-400 hover:border-gray-600'
-              }`}>
+              className="text-xs px-3 py-1.5 rounded-lg border font-medium transition-all"
+              style={{
+                background:   activeFilter === val ? (val === 'HOT' ? '#7f1d1d' : val === 'WARM' ? '#7c2d12' : '#1e3a5f') : 'transparent',
+                borderColor:  activeFilter === val ? (val === 'HOT' ? '#b91c1c' : val === 'WARM' ? '#c2410c' : '#1d4ed8') : 'var(--border)',
+                color:        activeFilter === val ? (val === 'HOT' ? '#fca5a5' : val === 'WARM' ? '#fdba74' : '#93c5fd') : 'var(--text-muted)',
+              }}>
               {label}
             </button>
           ))}
@@ -93,52 +182,59 @@ export default function LeadsPage() {
       {/* Kanban board */}
       <div className="flex-1 overflow-x-auto">
         <div className="flex gap-3 p-4 h-full" style={{ minWidth: 'max-content' }}>
+
           {COLUMNS.map(col => {
-            const colLeads = getByStage(col.id);
+            const colLeads = getColLeads(col.id);
             return (
-              <div key={col.id} className="w-64 flex flex-col shrink-0">
-                {/* Column header */}
-                <div className={`border-t-2 ${col.color} bg-gray-900 rounded-t-xl px-3 py-2.5 mb-2`}>
+              <div key={col.id} className="kanban-col flex flex-col">
+                <div className="kanban-col-header"
+                  style={{ borderTopColor: col.color, background: 'var(--bg-secondary)' }}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${col.dot}`} />
-                      <span className="text-sm font-semibold text-white">{col.label}</span>
+                      <div className="w-2 h-2 rounded-full" style={{ background: col.color }} />
+                      <span className="text-sm font-semibold text-[var(--text-primary)]">{col.label}</span>
                     </div>
-                    <span className="text-xs bg-gray-800 text-gray-400 px-1.5 py-0.5 rounded font-mono">{colLeads.length}</span>
+                    <span className="text-xs font-mono text-[var(--text-muted)]"
+                      style={{ background: 'var(--bg-primary)', padding: '1px 6px', borderRadius: '4px' }}>
+                      {colLeads.length}
+                    </span>
                   </div>
                 </div>
-                {/* Cards */}
                 <div className="space-y-2 flex-1 overflow-y-auto">
                   {loading ? (
-                    Array.from({ length: 2 }).map((_, i) => (
-                      <div key={i} className="bg-gray-900 rounded-xl border border-gray-800 p-3 animate-pulse">
-                        <div className="h-4 bg-gray-700 rounded w-3/4 mb-2" />
-                        <div className="h-3 bg-gray-800 rounded w-1/2" />
-                      </div>
-                    ))
+                    Array.from({ length: 2 }).map((_, i) => <SkeletonCard key={i} />)
                   ) : colLeads.length === 0 ? (
-                    <div className="text-center py-6 text-gray-700 text-xs">—</div>
+                    <div className="text-center py-8 text-[var(--text-muted)] text-xs">—</div>
                   ) : (
-                    colLeads.map(lead => (
-                      <button key={lead.id} onClick={() => setSelectedLead(lead)}
-                        className="w-full text-left bg-gray-900 rounded-xl border border-gray-800 hover:border-gray-700 hover:bg-gray-850 transition-all p-3 group">
-                        <div className="flex items-start justify-between gap-2 mb-1.5">
-                          <p className="text-white text-sm font-medium leading-tight">{lead.name}</p>
-                          {lead.temp && <div className={`w-2 h-2 rounded-full mt-1 shrink-0 ${TEMP_DOT[lead.temp] || 'bg-gray-600'}`} />}
-                        </div>
-                        <p className="text-gray-500 text-xs leading-tight">{lead.company}</p>
-                        {lead.industry && <p className="text-gray-600 text-xs mt-0.5">{lead.industry}</p>}
-                        {lead.pain_evidence && (
-                          <p className="text-orange-500/80 text-xs mt-1.5 leading-tight line-clamp-2">{lead.pain_evidence}</p>
-                        )}
-                        {lead.score > 0 && (
-                          <div className="mt-2 flex items-center gap-1">
-                            <span className="text-[10px] text-gray-600">score</span>
-                            <span className="text-xs font-mono text-gray-500">{lead.score}</span>
+                    colLeads.map(lead => {
+                      const temp = TEMP_STYLE[lead.temp] || TEMP_STYLE.DISCOVERED;
+                      return (
+                        <button key={lead.id} onClick={() => setSelected(lead)}
+                          className="lead-card group text-left w-full">
+                          <div className="flex items-start justify-between gap-2 mb-1.5">
+                            <p className="text-sm font-semibold text-[var(--text-primary)] leading-tight">{lead.name}</p>
+                            {lead.temp !== 'DISCOVERED' && (
+                              <div className="temp-dot mt-1" style={{ background: temp.dot }} />
+                            )}
                           </div>
-                        )}
-                      </button>
-                    ))
+                          <p className="text-xs text-[var(--text-muted)]">{lead.company}</p>
+                          {lead.industry && (
+                            <p className="text-xs text-[var(--text-muted)] opacity-60">{lead.industry}</p>
+                          )}
+                          {lead.pain_evidence && (
+                            <p className="text-xs text-orange-400/80 mt-2 leading-snug line-clamp-2">{lead.pain_evidence}</p>
+                          )}
+                          {lead.score > 0 && (
+                            <div className="mt-2 flex items-center gap-1.5">
+                              <div className="h-1 flex-1 rounded-full overflow-hidden" style={{ background: 'var(--border)' }}>
+                                <div className="h-full rounded-full" style={{ width: `${lead.score * 10}%`, background: col.color }} />
+                              </div>
+                              <span className="text-[10px] font-mono text-[var(--text-muted)]">{lead.score}</span>
+                            </div>
+                          )}
+                        </button>
+                      );
+                    })
                   )}
                 </div>
               </div>
@@ -146,23 +242,26 @@ export default function LeadsPage() {
           })}
 
           {/* Skipped column */}
-          {skipCount > 0 && (
-            <div className="w-64 shrink-0">
-              <div className={`border-t-2 ${SKIP.color} bg-gray-900 rounded-t-xl px-3 py-2.5 mb-2`}>
+          {skipLeads.length > 0 && (
+            <div className="kanban-col flex flex-col">
+              <div className="kanban-col-header" style={{ borderTopColor: '#52525b', background: 'var(--bg-secondary)' }}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className={`w-2 h-2 rounded-full ${SKIP.dot}`} />
-                    <span className="text-sm font-semibold text-white">{SKIP.label}</span>
+                    <div className="w-2 h-2 rounded-full bg-gray-500" />
+                    <span className="text-sm font-semibold text-[var(--text-primary)]">Skipped</span>
                   </div>
-                  <span className="text-xs bg-gray-800 text-gray-400 px-1.5 py-0.5 rounded font-mono">{skipCount}</span>
+                  <span className="text-xs font-mono text-[var(--text-muted)]"
+                    style={{ background: 'var(--bg-primary)', padding: '1px 6px', borderRadius: '4px' }}>
+                    {skipLeads.length}
+                  </span>
                 </div>
               </div>
-              <div className="space-y-2">
-                {leads.filter(l => l.stage === 'SKIP').map(lead => (
-                  <div key={lead.id} className="bg-gray-900 rounded-xl border border-gray-800 p-3 opacity-60">
-                    <p className="text-white text-sm font-medium">{lead.name}</p>
-                    <p className="text-gray-500 text-xs">{lead.company}</p>
-                    {lead.notes && <p className="text-gray-600 text-xs mt-1 line-clamp-2">{lead.notes}</p>}
+              <div className="space-y-2 flex-1">
+                {skipLeads.map(lead => (
+                  <div key={lead.id} className="card p-3.5 opacity-60">
+                    <p className="text-sm font-semibold text-[var(--text-primary)]">{lead.name}</p>
+                    <p className="text-xs text-[var(--text-muted)] mt-0.5">{lead.company}</p>
+                    {lead.notes && <p className="text-xs text-[var(--text-muted)] mt-1 line-clamp-2">{lead.notes}</p>}
                   </div>
                 ))}
               </div>
@@ -171,43 +270,8 @@ export default function LeadsPage() {
         </div>
       </div>
 
-      {/* Lead detail modal */}
-      {selectedLead && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-          onClick={() => setSelectedLead(null)}>
-          <div className="bg-gray-900 rounded-2xl border border-gray-700 w-full max-w-md shadow-2xl"
-            onClick={e => e.stopPropagation()}>
-            <div className="p-5 border-b border-gray-800">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h3 className="text-lg font-bold text-white">{selectedLead.name}</h3>
-                  <p className="text-gray-400 text-sm">{selectedLead.company} · {selectedLead.industry}</p>
-                </div>
-                <button onClick={() => setSelectedLead(null)} className="text-gray-500 hover:text-white text-xl">×</button>
-              </div>
-              <div className="flex items-center gap-2 mt-3">
-                <span className={`text-xs px-2 py-1 rounded ${selectedLead.temp === 'HOT' ? 'bg-red-900 text-red-300' : selectedLead.temp === 'WARM' ? 'bg-orange-900 text-orange-300' : 'bg-gray-800 text-gray-400'}`}>
-                  {selectedLead.temp}
-                </span>
-                <span className={`text-xs px-2 py-1 rounded ${
-                  COLUMNS.find(c => c.id === selectedLead.stage) ? `bg-gray-800 text-gray-300` : 'bg-gray-800 text-gray-600'
-                }`}>
-                  {selectedLead.stage}
-                </span>
-                {selectedLead.score > 0 && <span className="text-xs text-gray-600">score {selectedLead.score}</span>}
-              </div>
-            </div>
-            <div className="p-5 space-y-3">
-              {selectedLead.email && <div><p className="text-xs text-gray-500 mb-0.5">Email</p><p className="text-sm text-white">{selectedLead.email}</p></div>}
-              {selectedLead.phone && <div><p className="text-xs text-gray-500 mb-0.5">Phone</p><p className="text-sm text-white">{selectedLead.phone}</p></div>}
-              {selectedLead.location && <div><p className="text-xs text-gray-500 mb-0.5">Location</p><p className="text-sm text-white">{selectedLead.location}</p></div>}
-              {selectedLead.pain_evidence && <div><p className="text-xs text-gray-500 mb-0.5">Pain Signal</p><p className="text-sm text-orange-400">{selectedLead.pain_evidence}</p></div>}
-              {selectedLead.notes && <div><p className="text-xs text-gray-500 mb-0.5">Notes</p><p className="text-sm text-gray-400">{selectedLead.notes}</p></div>}
-              {selectedLead.discovery_date && <div><p className="text-xs text-gray-500 mb-0.5">Discovered</p><p className="text-sm text-gray-400">{selectedLead.discovery_date}</p></div>}
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Lead modal */}
+      {selected && <LeadModal lead={selected} onClose={() => setSelected(null)} />}
     </div>
   );
 }

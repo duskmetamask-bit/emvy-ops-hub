@@ -4,18 +4,18 @@ import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 
 const PAGE_META: Record<string, { title: string; description: string }> = {
-  '/': { title: 'Dashboard', description: 'Overview of EMVY operations' },
-  '/leads': { title: 'Leads', description: 'Pipeline — discover to close' },
-  '/discovery': { title: 'Discovery', description: 'Warm leads & outreach planning' },
-  '/audit': { title: 'Audit', description: '$1,500 AI audit process' },
-  '/build': { title: 'Build', description: '$3k–$5k implementation' },
-  '/maintain': { title: 'Maintain', description: '$1,500/month retainer' },
-  '/business': { title: 'Business', description: 'Entities, domains, grants' },
-  '/operating': { title: 'Operating', description: 'Processes, systems, APIs' },
-  '/apis': { title: 'APIs', description: 'Key integrations & credentials' },
-  '/infrastructure': { title: 'Infrastructure', description: 'Deployed apps & infra' },
-  '/actions': { title: 'Actions', description: 'Automation & cron jobs' },
-  '/seo': { title: 'SEO', description: 'Rankings & content' },
+  '/':            { title: 'Dashboard',   description: 'EMVY operations overview' },
+  '/leads':      { title: 'Leads',      description: 'Pipeline — discover to close' },
+  '/discovery':  { title: 'Discovery',   description: 'Warm leads and outreach' },
+  '/audit':      { title: 'Audit',      description: '$1,500 AI audit process' },
+  '/build':      { title: 'Build',      description: '$3k–$5k implementation' },
+  '/maintain':   { title: 'Maintain',   description: '$1,500/month retainer' },
+  '/business':   { title: 'Business',   description: 'Entities, domains, grants' },
+  '/operating':  { title: 'Operating',  description: 'Processes, systems, APIs' },
+  '/apis':       { title: 'APIs',       description: 'Key integrations and credentials' },
+  '/infrastructure': { title: 'Infrastructure', description: 'Deployed apps and infra' },
+  '/actions':    { title: 'Actions',    description: 'Priority task list' },
+  '/seo':        { title: 'SEO',        description: 'Rankings and content' },
 };
 
 export default function Header() {
@@ -23,34 +23,33 @@ export default function Header() {
   const [time, setTime] = useState('');
 
   useEffect(() => {
-    const update = () => {
-      setTime(new Date().toLocaleTimeString('en-AU', {
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        timeZone: 'Australia/Perth',
-      }));
-    };
-    update();
-    const interval = setInterval(update, 1000);
-    return () => clearInterval(interval);
+    const fmt = () => new Date().toLocaleTimeString('en-AU', {
+      hour: '2-digit', minute: '2-digit', second: '2-digit',
+      timeZone: 'Australia/Perth',
+    });
+    setTime(fmt());
+    const id = setInterval(() => setTime(fmt()), 1000);
+    return () => clearInterval(id);
   }, []);
 
   const meta = PAGE_META[pathname] || { title: pathname.replace('/', '') || 'Dashboard', description: '' };
 
   return (
-    <header className="h-14 border-b border-gray-800 flex items-center justify-between px-6 bg-gray-950 shrink-0">
+    <header style={{ height: 56, borderBottom: '1px solid var(--border)', background: 'var(--bg-primary)' }}
+      className="flex items-center justify-between px-6 shrink-0">
       <div>
-        <h2 className="text-base font-semibold text-white">{meta.title}</h2>
-        {meta.description && <p className="text-xs text-gray-500">{meta.description}</p>}
+        <h2 className="text-sm font-semibold text-[var(--text-primary)]">{meta.title}</h2>
+        {meta.description && <p className="text-xs text-[var(--text-muted)]">{meta.description}</p>}
       </div>
       <div className="flex items-center gap-4">
-        <span className="text-xs text-gray-500">AWST</span>
-        <span className="font-mono text-sm text-gray-300 tabular-nums">{time}</span>
         <div className="flex items-center gap-1.5">
-          <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-          <span className="text-xs text-gray-500">Live</span>
+          <div className="live-dot" />
+          <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-widest">Live</span>
         </div>
+        <div style={{ width: 1, height: 16, background: 'var(--border)' }} />
+        <span className="font-mono text-xs text-[var(--text-secondary)] tabular-nums">{time}</span>
+        <div style={{ width: 1, height: 16, background: 'var(--border)' }} />
+        <span className="text-[10px] text-[var(--text-muted)]">AWST</span>
       </div>
     </header>
   );
