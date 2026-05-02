@@ -302,7 +302,75 @@ body {
 }
 .slide-in { animation: slideIn 0.3s ease forwards; }
 
-/* ── Sidebar nav ── */
+/* ── Stagger animation system ── */
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideRight {
+  from { opacity: 0; transform: translateX(-10px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-4px); }
+}
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 8px var(--glow-color, rgba(99,102,241,0.3)); }
+  50%       { box-shadow: 0 0 20px var(--glow-color, rgba(99,102,241,0.5)); }
+}
+
+/* Stagger children — apply to parent, children inherit via --delay */
+.stagger-children > * { animation: fadeSlideUp 0.4s ease forwards; opacity: 0; }
+.stagger-children > *:nth-child(1) { animation-delay: 0.05s; }
+.stagger-children > *:nth-child(2) { animation-delay: 0.12s; }
+.stagger-children > *:nth-child(3) { animation-delay: 0.19s; }
+.stagger-children > *:nth-child(4) { animation-delay: 0.26s; }
+.stagger-children > *:nth-child(5) { animation-delay: 0.33s; }
+.stagger-children > *:nth-child(6) { animation-delay: 0.40s; }
+.stagger-children > *:nth-child(7) { animation-delay: 0.47s; }
+.stagger-children > *:nth-child(8) { animation-delay: 0.54s; }
+
+/* Direct stagger delays */
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.12s; }
+.stagger-3 { animation-delay: 0.19s; }
+.stagger-4 { animation-delay: 0.26s; }
+.stagger-5 { animation-delay: 0.33s; }
+.stagger-6 { animation-delay: 0.40s; }
+
+/* Slide-up (faster, for inline items) */
+.slide-up { animation: slideUp 0.3s ease forwards; }
+
+/* Scale-in (for modals, popovers) */
+.scale-in { animation: scaleIn 0.25s ease forwards; }
+
+/* Float (for ambient elements) */
+.float { animation: float 3s ease-in-out infinite; }
+
+/* Card hover effects */
+.card-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+}
+
+/* Glow pulse for active/urgent indicators */
+.glow-pulse {
+  animation: glowPulse 2s ease-in-out infinite;
+}
+
+/* Sidebar nav ── */
 .nav-item {
   display: flex;
   align-items: center;

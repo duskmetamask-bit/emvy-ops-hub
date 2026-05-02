@@ -3,6 +3,10 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
+const OVERVIEW = [
+  { href: '/',           label: 'Dashboard',  accent: '#6366f1', icon: '◈' },
+];
+
 const PROCESS_FLOW = [
   { href: '/leads',     label: 'Leads',     accent: '#3b82f6', icon: '◈' },
   { href: '/discovery', label: 'Discovery',  accent: '#f97316', icon: '◉' },
@@ -25,8 +29,9 @@ const TOOLS: Array<{ href: string; label: string; accent: string; icon: string; 
 ];
 
 function getActiveClass(href: string, accent: string, pathname: string) {
-  const isActive = pathname === href || pathname.startsWith(href + '/');
+  const isActive = href === '/' ? pathname === '/' : pathname === href || pathname.startsWith(href + '/');
   if (!isActive) return 'nav-item';
+  if (accent === '#6366f1') return 'nav-item active';
   if (accent === '#3b82f6') return 'nav-item active';
   if (accent === '#f97316') return 'nav-item active-orange';
   if (accent === '#f59e0b') return 'nav-item active-amber';
@@ -86,6 +91,8 @@ export default function Sidebar() {
 
       {/* Nav */}
       <div className="flex-1 py-4 space-y-5 overflow-y-auto">
+        <NavGroup title="Overview" items={OVERVIEW} />
+        <div style={{ borderTop: '1px solid var(--border)', margin: '0 12px' }} />
         <NavGroup title="Pipeline" items={PROCESS_FLOW} />
         <div style={{ borderTop: '1px solid var(--border)', margin: '0 12px' }} />
         <NavGroup title="Business" items={BUSINESS} />

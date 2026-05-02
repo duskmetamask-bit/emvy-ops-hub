@@ -8,7 +8,7 @@ const STAGE_META: Record<string, { color: string; bg: string; label: string }> =
   ENRICHED:   { color: '#a855f7', bg: 'bg-purple-500/20', label: 'Enriched' },
   SENT:       { color: '#3b82f6', bg: 'bg-blue-500/20', label: 'Email Sent' },
   REPLY:      { color: '#06b6d4', bg: 'bg-cyan-500/20', label: 'Reply' },
-  CALL:       { color: '#ec4899', bg: 'bg-pink-500/20', label: 'Call' },
+  CALL:       { color: '#ec4899', bg: '#ec489920', label: 'Call' },
   AUDIT:      { color: '#f59e0b', bg: 'bg-amber-500/20', label: 'Audit' },
   BUILD:      { color: '#10b981', bg: 'bg-emerald-500/20', label: 'Build' },
   DONE:       { color: '#22c55e', bg: 'bg-green-500/20', label: 'Client' },
@@ -16,23 +16,23 @@ const STAGE_META: Record<string, { color: string; bg: string; label: string }> =
 };
 
 const OFFER = [
-  { tier: 'Lead',   desc: 'Free discovery call',           color: '#6366f1' },
-  { tier: 'Audit',  desc: '$1,500 — 2 to 3 days',        color: '#f59e0b' },
-  { tier: 'Build',  desc: '$3k – $5k',                   color: '#10b981' },
-  { tier: 'Retain',desc: '$1,500 / month',               color: '#06b6d4' },
+  { tier: 'Lead',   desc: 'Free discovery call',       color: '#6366f1' },
+  { tier: 'Audit',  desc: '$1,500 — 2 to 3 days',    color: '#f59e0b' },
+  { tier: 'Build',  desc: '$3k – $5k',               color: '#10b981' },
+  { tier: 'Retain', desc: '$1,500 / month',           color: '#06b6d4' },
 ];
 
 const CRON_STATUS = [
-  { name: 'Lead Finder',          schedule: '9 AM Mon–Thu',    last: null },
-  { name: 'Reply Detector',       schedule: '9/11/1/3/5 PM',   last: null },
-  { name: 'AI Research',          schedule: 'Midnight daily',   last: null },
-  { name: 'Competitor Intel',     schedule: '9 AM daily',       last: null },
-  { name: 'Pipeline Health',      schedule: '8 AM Mon',         last: null },
-  { name: 'Content Pipeline',     schedule: '8 AM daily',       last: null },
-  { name: 'YouTube Script',       schedule: '8 AM Mon + Thu',   last: null },
-  { name: 'Content Review',       schedule: '6 PM Fri',         last: null },
-  { name: 'X Engagement',         schedule: '9–5 PM weekdays', last: null },
-  { name: 'Build Recommender',    schedule: '8 AM daily',       last: null },
+  { name: 'Lead Finder',        schedule: '9 AM Mon–Thu',  last: null },
+  { name: 'Reply Detector',     schedule: '9/11/1/3/5 PM', last: null },
+  { name: 'AI Research',        schedule: 'Midnight daily',  last: null },
+  { name: 'Competitor Intel',   schedule: '9 AM daily',      last: null },
+  { name: 'Pipeline Health',    schedule: '8 AM Mon',        last: null },
+  { name: 'Content Pipeline',   schedule: '8 AM daily',      last: null },
+  { name: 'YouTube Script',     schedule: '8 AM Mon + Thu',  last: null },
+  { name: 'Content Review',     schedule: '6 PM Fri',        last: null },
+  { name: 'X Engagement',       schedule: '9–5 PM weekdays',last: null },
+  { name: 'Build Recommender',  schedule: '8 AM daily',      last: null },
 ];
 
 export default function HomePage() {
@@ -41,6 +41,25 @@ export default function HomePage() {
   const [recent, setRecent] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [dateStr, setDateStr] = useState('');
+
+  // Outstanding actions — surfaced from the Actions page
+  const OUTSTANDING = [
+    { id: 'a1', priority: 'urgent', action: 'Buy emvy.ai domain', reason: 'Unblocks email deliverability, Search Console, Carrd landing page', status: 'waiting_on_dusk', icon: '⬡' },
+    { id: 'a2', priority: 'urgent', action: 'Set up GA4 on emvyai.vercel.app', reason: 'Need G-XXXXXXXXXX measurement ID from Google Analytics', status: 'waiting_on_dusk', icon: '◈' },
+    { id: 'a3', priority: 'high', action: 'Film first YouTube video', reason: 'Week 1: 3 AI agents in 30 days — engine of the flywheel', status: 'pending', icon: '◆' },
+    { id: 'a4', priority: 'high', action: 'Draft cold email sequence (3 emails)', reason: 'Repeatable outreach template before scaling outbound', status: 'pending', icon: '▣' },
+    { id: 'a5', priority: 'high', action: 'Send outreach to 5 warm leads', reason: 'Highest-leverage client acquisition step right now', status: 'pending', icon: '▤' },
+    { id: 'a6', priority: 'medium', action: 'Update LinkedIn profile (@duskwun)', reason: 'Needs ICP-facing bio before content starts', status: 'pending', icon: '◉' },
+    { id: 'a7', priority: 'medium', action: 'Update X profile (@duskwun)', reason: 'Bio, pinned post, banner — peer network needs clean setup', status: 'pending', icon: '◎' },
+  ];
+
+  const OUTSTANDING_META: Record<string, { color: string; bg: string; border: string }> = {
+    urgent: { color: '#ef4444', bg: 'rgba(239,68,68,0.08)', border: 'rgba(239,68,68,0.25)' },
+    high:   { color: '#f97316', bg: 'rgba(249,115,22,0.08)', border: 'rgba(249,115,22,0.25)' },
+    medium: { color: '#eab308', bg: 'rgba(234,179,8,0.08)', border: 'rgba(234,179,8,0.25)' },
+  };
+
+  const PRIORITY_ORDER = ['urgent', 'high', 'medium'];
 
   useEffect(() => {
     const fmt = new Date().toLocaleDateString('en-AU', {
@@ -90,14 +109,47 @@ export default function HomePage() {
   return (
     <div className="space-y-6">
 
-      {/* Page header */}
-      <div className="fade-in">
-        <h1 className="page-title">Operations Dashboard</h1>
-        <p className="page-subtitle">{dateStr}</p>
+      {/* Outstanding — priority actions surfaced front */}
+      <div className="card p-5 fade-in">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <div className="live-dot" />
+            <span className="section-title mb-0">Outstanding</span>
+            <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-widest ml-1">— needs attention</span>
+          </div>
+          <a href="/actions" className="text-xs text-[var(--accent-blue)] hover:text-blue-400 transition-colors">All actions →</a>
+        </div>
+        <div className="space-y-2 stagger-children">
+          {PRIORITY_ORDER.map(priority =>
+            OUTSTANDING.filter(a => a.priority === priority).map(a => {
+              const meta = OUTSTANDING_META[a.priority];
+              return (
+                <div key={a.id}
+                  className="flex items-start gap-3 p-3 rounded-xl card-hover"
+                  style={{ background: meta.bg, border: `1px solid ${meta.border}` }}>
+                  <span className="text-base shrink-0 mt-0.5" style={{ color: meta.color }}>{a.icon}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-[var(--text-primary)]">{a.action}</p>
+                    <p className="text-xs text-[var(--text-muted)] mt-0.5 leading-relaxed">{a.reason}</p>
+                  </div>
+                  {a.status === 'waiting_on_dusk' && (
+                    <span className="text-[10px] font-bold uppercase tracking-wider shrink-0 px-2 py-1 rounded-full"
+                      style={{ color: meta.color, background: `${meta.color}18`, border: `1px solid ${meta.color}40` }}>
+                      You
+                    </span>
+                  )}
+                  {a.status === 'pending' && (
+                    <span className="text-[10px] font-semibold shrink-0 text-yellow-400">To do</span>
+                  )}
+                </div>
+              );
+            })
+          )}
+        </div>
       </div>
 
       {/* Stat cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 fade-in">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 stagger-children">
         {loading ? (
           Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="card p-5 relative overflow-hidden">
@@ -107,7 +159,7 @@ export default function HomePage() {
           ))
         ) : (
           statCards.map((s) => (
-            <div key={s.label} className="card p-5 relative overflow-hidden" style={{ boxShadow: `0 0 0 1px ${s.glow}` }}>
+            <div key={s.label} className="card p-5 relative overflow-hidden card-hover" style={{ boxShadow: `0 0 0 1px ${s.glow}` }}>
               <div className="stat-card-accent" style={{ background: s.color }} />
               <div className="stat-value" style={{ color: s.color }}>{s.value}</div>
               <div className="stat-label mt-2">{s.label}</div>
@@ -145,7 +197,7 @@ export default function HomePage() {
             <div className="section-title mb-0">Pipeline</div>
             <a href="/leads" className="text-xs text-[var(--accent-blue)] hover:text-blue-400 transition-colors">View all →</a>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-2 stagger-children">
             {pipelineStages.map(stage => {
               const meta = STAGE_META[stage];
               const count = stageCounts[stage] || 0;
@@ -214,9 +266,9 @@ export default function HomePage() {
           <div className="section-title mb-0">Crons</div>
           <a href="/actions" className="text-xs text-[var(--accent-blue)] hover:text-blue-400 transition-colors">Manage →</a>
         </div>
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-2">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-2 stagger-children">
           {CRON_STATUS.map(cron => (
-            <div key={cron.name} className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)' }}>
+            <div key={cron.name} className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg card-hover" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)' }}>
               <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: '#22c55e', boxShadow: '0 0 5px #22c55e' }} />
               <div className="min-w-0">
                 <div className="text-xs font-medium text-[var(--text-primary)] truncate">{cron.name}</div>
@@ -230,10 +282,10 @@ export default function HomePage() {
       {/* Quick nav */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 fade-in">
         {[
-          { href: '/leads',      label: 'Leads',      desc: 'Pipeline management',   color: '#3b82f6' },
+          { href: '/leads',      label: 'Leads',      desc: 'Pipeline management',    color: '#3b82f6' },
           { href: '/discovery',  label: 'Discovery',   desc: 'Warm leads & outreach', color: '#f97316' },
           { href: '/audit',      label: 'Audit',       desc: '$1,500 AI audit process', color: '#f59e0b' },
-          { href: '/content',    label: 'Content',    desc: 'Content calendar & feedback', color: '#ec4899' },
+          { href: '/content',    label: 'Content',     desc: 'Content calendar & feedback', color: '#ec4899' },
         ].map(item => (
           <a key={item.href} href={item.href} className="quick-link">
             <div className="flex items-center justify-between">

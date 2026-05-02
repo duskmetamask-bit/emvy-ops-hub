@@ -126,7 +126,7 @@ function LeadModal({ lead, onClose }: { lead: Lead; onClose: () => void }) {
 export default function LeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeFilter, setActiveFilter] = useState<'ALL' | 'HOT' | 'WARM'>('ALL');
+  const [activeFilter, setActiveFilter] = useState<'ALL' | 'HOT' | 'WARM' | 'MISSING_EMAIL'>('ALL');
   const [selected, setSelected] = useState<Lead | null>(null);
 
   useEffect(() => {
@@ -139,13 +139,15 @@ export default function LeadsPage() {
     load();
   }, []);
 
-  const hotCount  = leads.filter(l => l.temp === 'HOT').length;
-  const warmCount = leads.filter(l => l.temp === 'WARM').length;
+  const hotCount       = leads.filter(l => l.temp === 'HOT').length;
+  const warmCount      = leads.filter(l => l.temp === 'WARM').length;
+  const missingEmailCount = leads.filter(l => !l.email || l.email.trim() === '').length;
 
   const getColLeads = (stage: string) => {
     let list = leads.filter(l => l.stage === stage);
-    if (activeFilter === 'HOT')  list = list.filter(l => l.temp === 'HOT');
-    if (activeFilter === 'WARM') list = list.filter(l => l.temp === 'WARM');
+    if (activeFilter === 'HOT')           list = list.filter(l => l.temp === 'HOT');
+    if (activeFilter === 'WARM')          list = list.filter(l => l.temp === 'WARM');
+    if (activeFilter === 'MISSING_EMAIL') list = list.filter(l => !l.email || l.email.trim() === '');
     return list;
   };
 
@@ -165,13 +167,13 @@ export default function LeadsPage() {
           </p>
         </div>
         <div className="flex items-center gap-1.5">
-          {([['ALL', 'All'], ['HOT', `Hot ${hotCount}`], ['WARM', `Warm ${warmCount}`]] as const).map(([val, label]) => (
+          {([['ALL', 'All'], ['HOT', `Hot ${hotCount}`], ['WARM', `Warm ${warmCount}`], ['MISSING_EMAIL', `Missing Email ${missingEmailCount}`]] as const).map(([val, label]) => (
             <button key={val} onClick={() => setActiveFilter(val)}
               className="text-xs px-3 py-1.5 rounded-lg border font-medium transition-all"
               style={{
-                background:   activeFilter === val ? (val === 'HOT' ? '#7f1d1d' : val === 'WARM' ? '#7c2d12' : '#1e3a5f') : 'transparent',
-                borderColor:  activeFilter === val ? (val === 'HOT' ? '#b91c1c' : val === 'WARM' ? '#c2410c' : '#1d4ed8') : 'var(--border)',
-                color:        activeFilter === val ? (val === 'HOT' ? '#fca5a5' : val === 'WARM' ? '#fdba74' : '#93c5fd') : 'var(--text-muted)',
+                background:   activeFilter === val ? (val === 'HOT' ? '#7f1d1d' : val === 'WARM' ? '#7c2d12' : val === 'MISSING_EMAIL' ? '#78350f' : '#1e3a5f') : 'transparent',
+                borderColor:  activeFilter === val ? (val === 'HOT' ? '#b91c1c' : val === 'WARM' ? '#c2410c' : val === 'MISSING_EMAIL' ? '#92400e' : '#1d4ed8') : 'var(--border)',
+                color:        activeFilter === val ? (val === 'HOT' ? '#fca5a5' : val === 'WARM' ? '#fdba74' : val === 'MISSING_EMAIL' ? '#fde68a' : '#93c5fd') : 'var(--text-muted)',
               }}>
               {label}
             </button>
@@ -213,9 +215,17 @@ export default function LeadsPage() {
                           className="lead-card group text-left w-full">
                           <div className="flex items-start justify-between gap-2 mb-1.5">
                             <p className="text-sm font-semibold text-[var(--text-primary)] leading-tight">{lead.name}</p>
-                            {lead.temp !== 'DISCOVERED' && (
-                              <div className="temp-dot mt-1" style={{ background: temp.dot }} />
-                            )}
+                            {(() => {
+                              const days = Math.floor((Date.now() - new Date(lead.created_at).getTime()) / 86400000);
+                              if (days <= 0) return null;
+                              const badgeColor = days > 7 ? '#ef4444' : days > 3 ? '#f59e0b' : '#22c55e';
+                              return (
+                                <span className="text-[9px] font-mono font-bold px-1 py-0.5 rounded shrink-0 mt-0.5"
+                                  style={{ background: `${badgeColor}20`, color: badgeColor, border: `1px solid ${badgeColor}40` }}>
+                                  {days}d
+                                </span>
+                              );
+                            })()}
                           </div>
                           <p className="text-xs text-[var(--text-muted)]">{lead.company}</p>
                           {lead.industry && (
