@@ -1,40 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase-server';
+import contentData from '@/lib/content-data.json';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
+  const platform = searchParams.get('platform');
   const date = searchParams.get('date');
   const week = searchParams.get('week');
-  const platform = searchParams.get('platform');
 
-  let query = supabaseAdmin.from('content_items').select('*').order('created_at', { ascending: false });
+  let items = contentData as any[];
 
-  if (date) query = query.eq('scheduled_date', date);
-  if (week) query = query.eq('week_slug', week);
-  if (platform) query = query.eq('platform', platform);
+  if (platform && platform !== 'all') {
+    items = items.filter(i => i.platform === platform);
+  }
+  if (date) {
+    items = items.filter(i => i.scheduled_date === date);
+  }
+  if (week) {
+    items = items.filter(i => i.week_slug === week);
+  }
 
-  const { data, error } = await query;
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ items: data });
+  // Sort by scheduled_date desc
+  items = items.sort((a, b) =>
+    new Date(b.scheduled_date).getTime() - new Date(a.scheduled_date).getTime()
+  );
+
+  return NextResponse.json({ items });
 }
 
 export async function POST(req: NextRequest) {
-  const body = await req.json();
-  const { platform, content_type, content_text, scheduled_date, week_slug } = body;
-
-  if (!platform || !content_type || !content_text || !scheduled_date) {
-    return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
-  }
-
-  const { data, error } = await supabaseAdmin.from('content_items').insert({
-    platform,
-    content_type,
-    content_text,
-    scheduled_date,
-    week_slug: week_slug || null,
-    status: 'draft',
-  }).select().single();
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json(data, { status: 201 });
+  // For now, new posts are added via the JSON file — not through the API
+  return NextResponse.json(
+    { error: 'Adding content via API not yet supported. Update the content-data.json file.' },
+    { status: 501 }
+  );
 }

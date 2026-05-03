@@ -1,0 +1,38 @@
+[
+  {
+    "id": "li-001",
+    "platform": "linkedin",
+    "content_type": "carousel",
+    "title": "Mon May 4 - Carousel: What 3 AI Agents in 30 Days Actually Looks Like",
+    "scheduled_date": "2026-05-04",
+    "status": "approved",
+    "week_slug": "3-ai-agents-in-30-days",
+    "content_text": "Most \"AI agents\" being sold to small businesses right now are just Zapier workflows with a ChatGPT wrapper.\n\nHere's what an actual build looks like in 30 days.\n\nSlide 1: Hook\nMost \"AI agents\" being sold to SMBs are just Zapier workflows with a ChatGPT wrapper.\nHere's what an actual build looks like in 30 days.\n\nSlide 2: Week 1\nMap every process in the business. Find the one that costs the most time for the least creativity.\n\nSlide 3: Week 2\nBuild Agent #1. Not fancy. Just functional. It handles ONE thing reliably.\n\nSlide 4: Week 3\nTest it with real data. Real scenarios. Fix what breaks.\n\nSlide 5: Week 4\nAgent #1 is running. Your team actually uses it. You start Agent #2.\n\nSlide 6: The Lesson\n30 days gets you ONE working agent and proof it works.\nNot a complete AI transformation. Not 15 automations. One thing. Running. Now.\n\nSlide 7:\nThe businesses that actually transform do this 6 times in year one.\nSequentially. Building on what works.\n\nSlide 8: The Outcome\nThe goal isn't the agent.\nIt's the evidence - that automation actually works in your business - so the next build gets approved faster.\n\nSlide 9: CTA\nWhat's the first process you'd automate if it only took 30 days?\n\n#AIAgents #SmallBusiness #AIAutomation #PerthBusiness #BusinessEfficiency",
+    "notes": "Carousel format. Dark background, white text, amber accent. Max 40 words per slide.",
+    "feedback": []
+  },
+  {
+    "id": "li-002",
+    "platform": "linkedin",
+    "content_type": "text_image",
+    "title": "Tue May 5 - Text+Image: The Wrong First Automation",
+    "scheduled_date": "2026-05-05",
+    "status": "draft",
+    "week_slug": "3-ai-agents-in-30-days",
+    "content_text": "Most SMB owners get sold the wrong first automation.\n\nThey hear \"automate your emails\" or \"set up AI chatbots\" and spend money on things that sound impressive but don't move the needle.\n\nThe first process you should automate is always the one that:\n- Eats the most time\n- Requires zero creativity\n- Keeps happening whether you have capacity or not\n\nFor tradies: job quoting with custom materials and labour.\nFor accountants: data entry and reconciliation.\nFor dentists: appointment reminders and intake forms.\n\nIt is never the thing that looks sexiest in the demo.\n\nThe business that automates the boring stuff first is the one that has time to actually grow.\n\nWhat's the most time-consuming boring task in your business right now?\n\n#SmallBusiness #AIAutomation #SMB #BusinessEfficiency #Tradies",
+    "notes": "Hook challenges the \"sexy automation\" narrative. Industry examples. Ends with question to drive comments.",
+    "feedback": []
+  },
+  {
+    "id": "li-003",
+    "platform": "linkedin",
+    "content_type": "text_image",
+    "title": "Thu May 7 - Text+Image: Why I Stopped Offering AI Strategy",
+    "scheduled_date": "2026-05-07",
+    "status": "draft",
+    "week_slug": "3-ai-agents-in-30-days",
+    "content_text": "I used to charge for AI strategy.\n\nPowerPoint decks. Roadmaps. \"Here's where AI can transform your business.\"\n\nClients loved the presentations. Most never implemented anything.\n\nWhy? Because a strategy document doesn't actually change how a business runs.\n\nSo I stopped selling strategy and started charging to build things.\n\nThe first thing I built for a client was a quoting tool that cut their job-quote time from 4 hours to 20 minutes.\n\nThey didn't need a roadmap to AI transformation.\nThey needed one thing fixed.\n\nIf you're selling AI to SMBs and you're leading with strategy, you're selling the wrong thing.\n\nIf you're an SMB owner and someone hands you a strategy document before they've built you anything, walk away.\n\n#FounderJourney #AI #SmallBusiness #Consulting #BuildInPublic",
+    "notes": "Personal founder post. Admits selling strategy was a mistake. Swap the 4 hours to 20 minutes stat for a real client result if available.",
+    "feedback": []
+  }
+]
