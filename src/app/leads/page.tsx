@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
 
 interface Lead {
   id: string;
@@ -132,8 +131,22 @@ export default function LeadsPage() {
   useEffect(() => {
     const load = async () => {
       try {
-        const { data } = await supabase.from('leads').select('*').order('created_at', { ascending: false });
-        setLeads(data || []);
+        const res = await fetch('/api/pipeline');
+        const data = await res.json();
+        // Pipeline API returns { leads, stats, topLeads } — flatten all leads from all stages
+        const allLeads: Lead[] = [];
+        for (const stage of Object.keys(data.leads || {})) {
+          for (const lead of (data.leads as Record<string, any[]>)[stage] || []) {
+            allLeads.push({ ...lead, stage });
+          }
+        }
+        // Also include topLeads not in the main flow
+        for (const lead of data.topLeads || []) {
+          if (!allLeads.find(l => l.id === lead.id)) {
+            allLeads.push({ ...lead, stage: lead.stage || 'DISCOVERED' });
+          }
+        }
+        setLeads(allLeads);
       } catch { /* silent */ } finally { setLoading(false); }
     };
     load();
