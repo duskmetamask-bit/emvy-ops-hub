@@ -1,197 +1,158 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { useState } from 'react';
+import Link from 'next/link';
 
-// ─── WEEKLY SCHEDULE DATA ─────────────────────────────────────────────────
+// ─── DUSK'S WEEKLY SCHEDULE ───────────────────────────────────────────────
+// Based on: MEWY Sparring / Content Review / Cron Review / Filming / X+Replies / Posting times
 
-const WEEKLY_SCHEDULE: Record<string, {
+const DAY_SCHEDULES: Record<string, {
   label: string;
-  emoji: string;
   color: string;
-  rows: { time: string; agent: 'DUSK' | 'MEWY' | 'CRON'; task: string; note?: string }[];
+  blocks: {
+    time: string;
+    block: string;
+    type: 'DUSK' | 'MEWY' | 'CRON' | 'SOCIAL';
+    note?: string;
+    highlight?: boolean;
+  }[];
 }> = {
   monday: {
     label: 'Monday',
-    emoji: 'Mon',
     color: '#6366f1',
-    rows: [
-      { time: '8:00 AM', agent: 'CRON', task: 'Pipeline Health report drops', note: 'MON ONLY' },
-      { time: '8:00 AM', agent: 'CRON', task: 'Build Recommender fires', note: 'DAILY' },
-      { time: '8:00 AM', agent: 'CRON', task: 'LinkedIn + X content drafts land in dashboard', note: 'DAILY' },
-      { time: '8:00 AM', agent: 'MEWY', task: 'YouTube script delivered → Dusk reviews', note: 'MON + THU' },
-      { time: '9:00 AM', agent: 'CRON', task: 'Lead Finder fires', note: 'MON–THU' },
-      { time: '9:00 AM', agent: 'CRON', task: 'Competitor Intel fires', note: 'DAILY' },
-      { time: '9 AM–5 PM', agent: 'DUSK', task: 'Check dashboard, review content drafts, reply to replies', note: 'AS NEEDED' },
+    blocks: [
+      { time: '8:00 AM', block: 'Review Crons', type: 'CRON', note: 'Pipeline Health + Build Recommender + Content drops', highlight: false },
+      { time: '8:30 AM', block: 'MEWY Sparring Session', type: 'MEWY', note: 'Review cron outputs, decide what to act on', highlight: true },
+      { time: '9:00 AM', block: 'Lead Finder fires', type: 'CRON', note: 'Mon–Thu' },
+      { time: '9:00 AM', block: 'Check email — any replies?', type: 'DUSK', note: 'Reply Detector results' },
+      { time: '10:00 AM', block: 'Outreach block', type: 'DUSK', note: 'Draft or send emails to warm leads' },
+      { time: 'Flexible', block: 'MEWY Building', type: 'MEWY', note: 'Builds, automations, fixes' },
     ],
   },
   tuesday: {
     label: 'Tuesday',
-    emoji: 'Tue',
     color: '#3b82f6',
-    rows: [
-      { time: '8:00 AM', agent: 'CRON', task: 'LinkedIn + X content drafts land in dashboard', note: 'DAILY' },
-      { time: '8:00 AM', agent: 'CRON', task: 'Build Recommender fires', note: 'DAILY' },
-      { time: '9 AM–5 PM', agent: 'DUSK', task: 'Review content, approve or give feedback', note: 'AS NEEDED' },
-      { time: '9/11/1/3/5 PM', agent: 'CRON', task: 'Reply Detector checks Gmail', note: 'M–F' },
+    blocks: [
+      { time: '8:00 AM', block: 'Review Crons', type: 'CRON', note: 'Content Pipeline drops' },
+      { time: '8:30 AM', block: 'Content Review — Improvement Loop', type: 'DUSK', note: 'Approve/edit X posts, LinkedIn drafts', highlight: true },
+      { time: '9:00 AM', block: 'Reply Detector', type: 'CRON', note: '9AM check' },
+      { time: '11:00 AM', block: 'X — Post + Engage', type: 'SOCIAL', note: 'Post content, reply to replies', highlight: true },
+      { time: '1:00 PM', block: 'Reply Detector', type: 'CRON', note: '11AM + 1PM checks' },
+      { time: 'Flexible', block: 'MEWY Building', type: 'MEWY', note: 'Any active builds' },
     ],
   },
   wednesday: {
     label: 'Wednesday',
-    emoji: 'Wed',
     color: '#a855f7',
-    rows: [
-      { time: '8:00 AM', agent: 'CRON', task: 'LinkedIn + X content drafts land in dashboard', note: 'DAILY' },
-      { time: '8:00 AM', agent: 'CRON', task: 'Build Recommender fires', note: 'DAILY' },
-      { time: '9 AM–5 PM', agent: 'DUSK', task: 'Check for new leads, warm leads, any replies', note: 'AS NEEDED' },
-      { time: '9/11/1/3/5 PM', agent: 'CRON', task: 'Reply Detector checks Gmail', note: 'M–F' },
+    blocks: [
+      { time: '8:00 AM', block: 'Review Crons', type: 'CRON', note: 'Midnight research drops' },
+      { time: '8:30 AM', block: 'MEWY Sparring Session', type: 'MEWY', note: 'Weekly deep-dive on research, leads, strategy', highlight: true },
+      { time: '9:00 AM', block: 'Reply Detector', type: 'CRON', note: '9AM check' },
+      { time: '11:00 AM', block: 'X — Post + Engage', type: 'SOCIAL', note: 'Mid-week thought leadership post', highlight: true },
+      { time: '1:00 PM', block: 'Reply Detector', type: 'CRON', note: '1PM check' },
+      { time: 'Flexible', block: 'Lead Gen Review', type: 'DUSK', note: 'Review new leads from Lead Finder' },
     ],
   },
   thursday: {
     label: 'Thursday',
-    emoji: 'Thu',
     color: '#f59e0b',
-    rows: [
-      { time: '8:00 AM', agent: 'CRON', task: 'LinkedIn + X content drafts land in dashboard', note: 'DAILY' },
-      { time: '8:00 AM', agent: 'CRON', task: 'Build Recommender fires', note: 'DAILY' },
-      { time: '8:00 AM', agent: 'MEWY', task: 'YouTube script delivered → Dusk reviews', note: 'MON + THU' },
-      { time: '9 AM–5 PM', agent: 'DUSK', task: 'Review content, approve or give feedback', note: 'AS NEEDED' },
-      { time: '9/11/1/3/5 PM', agent: 'CRON', task: 'Reply Detector checks Gmail', note: 'M–F' },
+    blocks: [
+      { time: '8:00 AM', block: 'Review Crons', type: 'CRON', note: 'YouTube Script drops' },
+      { time: '8:30 AM', block: 'Film YouTube Video', type: 'DUSK', note: '45–60 min filming block — THIS IS THE BIG ONE', highlight: true },
+      { time: '9:00 AM', block: 'Reply Detector', type: 'CRON', note: '9AM check' },
+      { time: '1:00 PM', block: 'Reply Detector', type: 'CRON', note: '1PM check' },
+      { time: '3:00 PM', block: 'Reply Detector', type: 'CRON', note: '3PM check' },
+      { time: 'Flexible', block: 'MEWY Building', type: 'MEWY', note: 'Post-film follow-up, content repurposing' },
     ],
   },
   friday: {
     label: 'Friday',
-    emoji: 'Fri',
     color: '#10b981',
-    rows: [
-      { time: '8:00 AM', agent: 'CRON', task: 'LinkedIn + X content drafts land in dashboard', note: 'DAILY' },
-      { time: '8:00 AM', agent: 'CRON', task: 'Build Recommender fires', note: 'DAILY' },
-      { time: '8:00 AM', agent: 'CRON', task: 'Substack article draft lands in dashboard', note: 'WEEKLY' },
-      { time: '9 AM–5 PM', agent: 'DUSK', task: 'End-of-week review: leads, replies, content', note: 'AS NEEDED' },
-      { time: '9/11/1/3/5 PM', agent: 'CRON', task: 'Reply Detector checks Gmail', note: 'M–F' },
-      { time: '6:00 PM', agent: 'CRON', task: 'Content Review fires — weekly performance digest', note: 'FRI ONLY' },
-    ],
-  },
-  weekend: {
-    label: 'Saturday–Sunday',
-    emoji: 'Wkd',
-    color: '#52525b',
-    rows: [
-      { time: 'No crons', agent: 'CRON', task: 'All crons pause Sat/Sun', note: '' },
-      { time: 'Anytime', agent: 'DUSK', task: 'Review anything pending, plan ahead', note: 'OPTIONAL' },
+    blocks: [
+      { time: '8:00 AM', block: 'Review Crons', type: 'CRON', note: 'Content + Substack drops' },
+      { time: '8:30 AM', block: 'Content Review — Weekly Loop', type: 'DUSK', note: 'Review Substack draft, wrap up week\'s content', highlight: true },
+      { time: '9:00 AM', block: 'Reply Detector', type: 'CRON', note: '9AM check' },
+      { time: '11:00 AM', block: 'X — Post + Engage', type: 'SOCIAL', note: 'End of week post, engage with replies', highlight: true },
+      { time: '1:00 PM', block: 'Reply Detector', type: 'CRON', note: '1PM + 3PM checks' },
+      { time: '5:00 PM', block: 'Weekly Review', type: 'DUSK', note: 'What worked, what didn\'t, plan next week', highlight: true },
     ],
   },
 };
 
 const AGENT_META = {
-  DUSK: { label: 'Dusk', bg: 'rgba(236,72,153,0.12)', color: '#ec4899', border: 'rgba(236,72,153,0.25)', dot: '#ec4899' },
-  MEWY: { label: 'MEWY', bg: 'rgba(168,85,247,0.12)', color: '#a855f7', border: 'rgba(168,85,247,0.25)', dot: '#a855f7' },
-  CRON: { label: 'Cron', bg: 'rgba(99,102,241,0.10)', color: '#6366f1', border: 'rgba(99,102,241,0.20)', dot: '#6366f1' },
+  DUSK:   { label: 'Dusk',   bg: 'rgba(236,72,153,0.10)', color: '#ec4899', border: 'rgba(236,72,153,0.20)', dot: '#ec4899' },
+  MEWY:   { label: 'MEWY',   bg: 'rgba(168,85,247,0.10)', color: '#a855f7', border: 'rgba(168,85,247,0.20)', dot: '#a855f7' },
+  CRON:   { label: 'Cron',   bg: 'rgba(99,102,241,0.08)', color: '#6366f1', border: 'rgba(99,102,241,0.15)', dot: '#6366f1' },
+  SOCIAL: { label: 'X/Social', bg: 'rgba(59,130,246,0.08)', color: '#3b82f6', border: 'rgba(59,130,246,0.15)', dot: '#3b82f6' },
 };
 
-// ─── INTERFACES ───────────────────────────────────────────────────────────
+// ─── PRACTICE DOCS ─────────────────────────────────────────────────────────
 
-interface Process {
-  id: string;
-  name: string;
-  description: string;
-  status: string;
-  owner: string;
-}
-
-interface System {
-  id: string;
-  name: string;
-  type: string;
-  status: string;
-  purpose: string;
-}
-
-interface ApiIntegration {
-  id: string;
-  name: string;
-  status: string;
-  purpose: string;
-}
-
-const CORE_SYSTEMS = [
-  { name: 'Supabase', type: 'Database', status: 'Live', purpose: 'CRM, leads, audit reports, business data' },
-  { name: 'Vercel', type: 'Hosting', status: 'Live', purpose: 'emvyai.vercel.app deployment' },
-  { name: 'Gmail SMTP', type: 'Email', status: 'Live', purpose: 'dawnlabsai@gmail.com outreach' },
-  { name: 'CAL.com', type: 'Scheduling', status: 'Live', purpose: 'jake-emvy/15-min-ai-chat booking' },
-  { name: 'VAPI', type: 'Voice AI', status: 'Live', purpose: 'AI phone agent (Callie)' },
-  { name: 'NVIDIA API', type: 'AI/ML', status: 'Live', purpose: 'LLM inference, AI processing' },
-  { name: 'X API', type: 'Social', status: 'Live', purpose: 'Social monitoring and posting' },
+const PRACTICE_DOCS = [
+  {
+    title: 'Audit Questions & Areas to Cover',
+    file: 'emvy-audit-questions.md',
+    desc: 'Discovery questions, pain point areas, evaluation criteria, ICP check — everything to cover in a Callie discovery call or intake form.',
+    status: 'draft',
+    accent: '#f59e0b',
+  },
+  {
+    title: 'AI Capabilities & Tool Directory',
+    file: 'emvy-ai-capabilities.md',
+    desc: 'High-level directory of AI capabilities and providers: agent building (n8n, MAKE, Claude CoWork), voice AI (VAPI), workflows, and use-case mapping for SMB clients.',
+    status: 'draft',
+    accent: '#6366f1',
+  },
+  {
+    title: 'Audit Report Template',
+    file: 'emvy-audit-report-template.md',
+    desc: 'PDF-ready structure: AI Opportunity Map, Process Pain Points, Quick Wins, Tool Recommendations, ROI Estimate, Implementation Roadmap.',
+    status: 'todo',
+    accent: '#10b981',
+  },
+  {
+    title: 'Cold Email Sequence (3 Emails)',
+    file: 'emvy-email-sequence.md',
+    desc: 'Sequence 1: Intro / Sequence 2: Follow-up / Sequence 3: Breakup. Hooks, angles, and templates for HOT/WARM outreach.',
+    status: 'todo',
+    accent: '#ec4899',
+  },
 ];
+
+// ─── LEAD MAGNET ───────────────────────────────────────────────────────────
+
+const LEAD_MAGNET = {
+  title: '"AI for Your Business" — Free Discovery Guide',
+  stages: [
+    { label: 'Lead Magnet Offer', desc: 'Free PDF or mini-course: "5 Ways AI Can Cut Your Admin in Half"', status: 'idea', color: '#6366f1' },
+    { label: 'Landing Page', desc: 'Carrd or Notion page — collect email in exchange for guide', status: 'idea', color: '#a855f7' },
+    { label: 'Email Sequence', desc: '3-email nurture sequence from lead magnet delivery', status: 'todo', color: '#3b82f6' },
+    { label: 'Social Proof', desc: 'Add case studies and audit examples as social proof', status: 'todo', color: '#f59e0b' },
+  ],
+  current: 'idea',
+};
 
 // ─── COMPONENT ─────────────────────────────────────────────────────────────
 
 export default function OperatingPage() {
-  const [processes, setProcesses] = useState<Process[]>([]);
-  const [systems, setSystems] = useState<System[]>([]);
-  const [apis, setApis] = useState<ApiIntegration[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [activeDay, setActiveDay] = useState<string>('monday');
+  const [activeDay, setActiveDay] = useState<string>(new Date().getDay() === 0 || new Date().getDay() === 6 ? 'monday' : ['monday','tuesday','wednesday','thursday','friday'][new Date().getDay() - 1]);
+  const active = DAY_SCHEDULES[activeDay];
 
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const [p, s, a] = await Promise.all([
-          supabase.from('processes').select('*').order('name', { ascending: true }),
-          supabase.from('systems').select('*').order('name', { ascending: true }),
-          supabase.from('api_integrations').select('*').order('name', { ascending: true }),
-        ]);
-        setProcesses(p.data || []);
-        setSystems(s.data || []);
-        setApis(a.data || []);
-      } catch { /* silent */ } finally { setLoading(false); }
-    };
-    load();
-  }, []);
-
-  const activeDayData = WEEKLY_SCHEDULE[activeDay];
+  const weekDays = ['monday','tuesday','wednesday','thursday','friday'];
 
   return (
-    <div className="space-y-6 fade-in">
+    <div className="space-y-6">
 
       {/* Header */}
       <div className="page-header">
         <h1 className="page-title">Operating</h1>
-        <p className="page-subtitle">Processes · Systems · API Integrations</p>
+        <p className="page-subtitle">Schedule · Practice · Lead Magnet · Systems</p>
       </div>
 
-      {/* Core Systems */}
-      <div className="card p-5">
-        <div className="flex items-center justify-between mb-4">
-          <div className="section-title" style={{ marginBottom: 0 }}>Core Systems</div>
-          <span className="badge" style={{ background: '#a855f720', color: '#a855f7', border: '1px solid #a855f730' }}>
-            {CORE_SYSTEMS.filter(s => s.status === 'Live').length} live
-          </span>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {CORE_SYSTEMS.map(sys => (
-            <div key={sys.name} className="flex items-start justify-between p-3 rounded-lg"
-              style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)' }}>
-              <div>
-                <p className="text-sm font-semibold text-[var(--text-primary)]">{sys.name}</p>
-                <p className="text-xs text-[var(--text-muted)]">{sys.type} · {sys.purpose}</p>
-              </div>
-              <span className="badge shrink-0" style={{
-                background: sys.status === 'Live' ? '#10b98120' : '#52525b20',
-                color: sys.status === 'Live' ? '#10b981' : '#52525b',
-                border: sys.status === 'Live' ? '#10b98130' : '#27272a',
-              }}>
-                {sys.status}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Weekly Schedule */}
+      {/* ── WEEKLY SCHEDULE ── */}
       <div className="card p-5">
         <div className="flex items-center justify-between mb-5">
-          <div className="section-title" style={{ marginBottom: 0 }}>Weekly Schedule</div>
+          <div className="section-title">Dusk's Weekly Schedule</div>
           <div className="flex items-center gap-3 text-[10px]">
             {Object.entries(AGENT_META).map(([key, meta]) => (
               <div key={key} className="flex items-center gap-1.5">
@@ -204,13 +165,12 @@ export default function OperatingPage() {
 
         {/* Day tabs */}
         <div className="flex gap-2 mb-5 flex-wrap">
-          {Object.entries(WEEKLY_SCHEDULE).map(([key, day]) => {
+          {weekDays.map(key => {
+            const day = DAY_SCHEDULES[key];
             const isActive = key === activeDay;
             return (
-              <button
-                key={key}
-                onClick={() => setActiveDay(key)}
-                className="flex-1 min-w-[100px] py-2 px-3 rounded-lg text-xs font-semibold text-center transition-all cursor-pointer"
+              <button key={key} onClick={() => setActiveDay(key)}
+                className="flex-1 min-w-[90px] py-2 px-3 rounded-lg text-xs font-semibold text-center transition-all cursor-pointer"
                 style={{
                   background: isActive ? `${day.color}18` : 'var(--bg-secondary)',
                   color: isActive ? day.color : 'var(--text-muted)',
@@ -222,52 +182,45 @@ export default function OperatingPage() {
           })}
         </div>
 
-        {/* Schedule rows */}
+        {/* Schedule blocks */}
         <div className="space-y-1.5">
-          {activeDayData.rows.map((row, i) => {
-            const meta = AGENT_META[row.agent];
-            const isDusk = row.agent === 'DUSK';
+          {active.blocks.map((block, i) => {
+            const meta = AGENT_META[block.type];
+            const isDuskOrSocial = block.type === 'DUSK' || block.type === 'SOCIAL';
             return (
-              <div key={i} className="flex items-start gap-3 p-3 rounded-lg transition-all"
+              <div key={i} className={`flex items-start gap-3 p-3 rounded-lg transition-all ${block.highlight ? 'ring-1 ring-offset-1 ring-offset-[var(--bg-primary)]' : ''}`}
                 style={{
-                  background: isDusk ? meta.bg : 'var(--bg-secondary)',
-                  border: `1px solid ${isDusk ? meta.border : 'var(--border)'}`,
+                  background: block.highlight ? `${meta.color}12` : isDuskOrSocial ? meta.bg : 'var(--bg-secondary)',
+                  border: `1px solid ${block.highlight ? meta.color + '35' : isDuskOrSocial ? meta.border : 'var(--border)'}`,
+                  ...(block.highlight ? { '--tw-ring-color': meta.color } : {}),
                 }}>
                 <div className="w-24 shrink-0 pt-0.5">
-                  <div className="text-[11px] font-medium text-[var(--text-muted)] whitespace-nowrap">{row.time}</div>
+                  <div className="text-[11px] font-medium text-[var(--text-muted)]">{block.time}</div>
                 </div>
-                <div className="w-16 shrink-0 pt-0.5">
+                <div className="w-20 shrink-0 pt-0.5">
                   <div className="flex items-center gap-1.5">
                     <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: meta.dot }} />
-                    <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: meta.color }}>{row.agent}</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: meta.color }}>{block.type === 'SOCIAL' ? 'X' : block.type}</span>
                   </div>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className={`text-sm ${isDusk ? 'font-semibold' : 'font-normal'} text-[var(--text-primary)]`}>{row.task}</div>
-                </div>
-                {row.note && (
-                  <div className="shrink-0 pt-0.5">
-                    <span className="text-[9px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full"
-                      style={{
-                        background: `${activeDayData.color}18`,
-                        color: activeDayData.color,
-                        border: `1px solid ${activeDayData.color}30`,
-                      }}>
-                      {row.note}
-                    </span>
+                  <div className={`text-sm ${isDuskOrSocial || block.highlight ? 'font-semibold' : 'font-normal'} text-[var(--text-primary)]`}>
+                    {block.block}
+                    {block.highlight && <span className="ml-2 text-[9px] font-black uppercase tracking-widest" style={{ color: meta.color }}>★ PRIORITY</span>}
                   </div>
-                )}
+                  {block.note && <div className="text-xs text-[var(--text-muted)] mt-0.5">{block.note}</div>}
+                </div>
               </div>
             );
           })}
         </div>
 
-        {/* Dusk time summary */}
+        {/* Dusk time commitment */}
         <div className="mt-4 p-4 rounded-xl flex items-center justify-between"
           style={{ background: 'rgba(236,72,153,0.06)', border: '1px solid rgba(236,72,153,0.15)' }}>
           <div>
             <div className="text-xs font-semibold" style={{ color: '#ec4899' }}>Dusk's time commitment</div>
-            <div className="text-[11px] text-[var(--text-muted)] mt-0.5">~1.5 hrs/week — filming, approvals, X engagement</div>
+            <div className="text-[11px] text-[var(--text-muted)] mt-0.5">~1.5 hrs/week — filming (Thu), content review (Tue/Fri), X (daily)</div>
           </div>
           <div className="text-right">
             <div className="text-2xl font-black" style={{ color: '#ec4899' }}>1.5h</div>
@@ -276,77 +229,145 @@ export default function OperatingPage() {
         </div>
       </div>
 
-      {/* Processes */}
-      <div className="card p-5">
-        <div className="flex items-center justify-between mb-4">
-          <div className="section-title" style={{ marginBottom: 0 }}>Processes</div>
-          <span className="badge" style={{ background: '#a855f720', color: '#a855f7', border: '1px solid #a855f730' }}>
-            {processes.length} tracked
-          </span>
-        </div>
-        {loading ? (
-          <div className="space-y-2">
-            {[1, 2, 3].map(i => <div key={i} className="skeleton h-12 w-full rounded-lg" />)}
-          </div>
-        ) : processes.length === 0 ? (
-          <div className="py-8 text-center text-[var(--text-muted)] text-sm">
-            No processes yet — add to processes table in Supabase
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {processes.map(p => (
-              <div key={p.id} className="flex items-center justify-between p-3 rounded-lg"
-                style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)' }}>
-                <div>
-                  <p className="text-sm font-semibold text-[var(--text-primary)]">{p.name}</p>
-                  <p className="text-xs text-[var(--text-muted)]">{p.description}</p>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  {p.owner && <span className="text-xs text-[var(--text-muted)]">{p.owner}</span>}
-                  <span className="badge" style={{ background: '#a855f720', color: '#a855f7', border: '1px solid #a855f730' }}>
-                    {p.status}
+      {/* ── PRACTICE DOCS + LEAD MAGNET ── */}
+      <div className="grid lg:grid-cols-2 gap-5">
+
+        {/* Practice docs */}
+        <div className="card p-5">
+          <div className="section-title mb-4">Practice Docs</div>
+          <div className="space-y-3">
+            {PRACTICE_DOCS.map(doc => (
+              <div key={doc.file} className="p-4 rounded-xl"
+                style={{ background: 'var(--bg-secondary)', border: `1px solid ${doc.status === 'draft' ? doc.accent + '30' : 'var(--border)'}` }}>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="text-sm font-semibold text-[var(--text-primary)]">{doc.title}</div>
+                    <div className="text-xs text-[var(--text-muted)] mt-1 leading-relaxed">{doc.desc}</div>
+                    <div className="text-[10px] font-mono text-[var(--text-muted)] mt-1">{doc.file}</div>
+                  </div>
+                  <span className="shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                    style={{
+                      background: doc.status === 'done' ? 'rgba(16,185,129,0.12)' : doc.status === 'draft' ? `${doc.accent}15` : 'rgba(99,102,241,0.10)',
+                      color: doc.status === 'done' ? '#10b981' : doc.status === 'draft' ? doc.accent : '#6366f1',
+                    }}>
+                    {doc.status.toUpperCase()}
                   </span>
                 </div>
               </div>
             ))}
           </div>
-        )}
-      </div>
-
-      {/* API Integrations */}
-      <div className="card p-5">
-        <div className="flex items-center justify-between mb-4">
-          <div className="section-title" style={{ marginBottom: 0 }}>API Integrations</div>
-          <a href="/apis" className="text-xs text-[var(--accent-blue)] hover:underline">View all APIs →</a>
+          <div className="mt-3 pt-3 text-center" style={{ borderTop: '1px solid var(--border)' }}>
+            <span className="text-xs text-[var(--text-muted)]">These docs get us ready to service clients the moment we land one</span>
+          </div>
         </div>
-        {loading ? (
-          <div className="space-y-2">
-            {[1, 2].map(i => <div key={i} className="skeleton h-12 w-full rounded-lg" />)}
+
+        {/* Lead Magnet */}
+        <div className="card p-5">
+          <div className="section-title mb-4">Lead Magnet</div>
+          <div className="p-4 rounded-xl mb-4"
+            style={{ background: 'rgba(249,115,22,0.06)', border: '1px solid rgba(249,115,22,0.15)' }}>
+            <div className="text-sm font-semibold mb-1" style={{ color: '#f97316' }}>{LEAD_MAGNET.title}</div>
+            <div className="text-xs text-[var(--text-muted)]">The asset we give away free to cold traffic in exchange for their email</div>
           </div>
-        ) : apis.length === 0 ? (
-          <div className="py-8 text-center text-[var(--text-muted)] text-sm">
-            No API integrations tracked — see /apis for full list
-          </div>
-        ) : (
           <div className="space-y-2">
-            {apis.map(a => (
-              <div key={a.id} className="flex items-center justify-between p-3 rounded-lg"
+            {LEAD_MAGNET.stages.map((stage, i) => (
+              <div key={i} className="flex items-start gap-3 p-3 rounded-lg"
                 style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)' }}>
-                <div>
-                  <p className="text-sm font-semibold text-[var(--text-primary)]">{a.name}</p>
-                  <p className="text-xs text-[var(--text-muted)]">{a.purpose}</p>
+                <div className="w-5 h-5 rounded-full shrink-0 flex items-center justify-center text-[10px] font-black mt-0.5"
+                  style={{ background: `${stage.color}20`, color: stage.color }}>
+                  {i + 1}
                 </div>
-                <span className="badge" style={{
-                  background: a.status === 'live' ? '#10b98120' : '#52525b20',
-                  color: a.status === 'live' ? '#10b981' : '#52525b',
-                  border: a.status === 'live' ? '#10b98130' : '#27272a',
-                }}>
-                  {a.status}
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium text-[var(--text-primary)]">{stage.label}</div>
+                  <div className="text-xs text-[var(--text-muted)] mt-0.5">{stage.desc}</div>
+                </div>
+                <span className="shrink-0 text-[9px] font-semibold px-2 py-0.5 rounded-full"
+                  style={{
+                    background: stage.status === 'done' ? 'rgba(16,185,129,0.12)' : stage.status === 'idea' ? 'rgba(99,102,241,0.10)' : 'rgba(99,102,241,0.08)',
+                    color: stage.status === 'done' ? '#10b981' : '#6366f1',
+                  }}>
+                  {stage.status.toUpperCase()}
                 </span>
               </div>
             ))}
           </div>
-        )}
+          <div className="mt-4 pt-3 flex items-center gap-2" style={{ borderTop: '1px solid var(--border)' }}>
+            <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#f97316' }} />
+            <span className="text-xs text-[var(--text-muted)]">Priority: build the guide content first, then set up Carrd landing page</span>
+          </div>
+        </div>
+      </div>
+
+      {/* ── FLOWCHART ── */}
+      <div className="card p-5">
+        <div className="section-title mb-1">EMVY Business Flow</div>
+        <p className="text-xs text-[var(--text-muted)] mb-5">Where we are right now — next big action highlighted</p>
+        <div className="flex items-center gap-3 overflow-x-auto pb-2">
+          {[
+            { label: 'Find Leads', sub: 'Lead Finder cron', color: '#3b82f6', done: true, next: false },
+            { label: 'Warm Up', sub: 'Dusk sends emails', color: '#f97316', done: false, next: true },
+            { label: 'Get Reply', sub: 'Reply Detector', color: '#06b6d4', done: false, next: false },
+            { label: 'Discovery Call', sub: 'VAPI — Callie', color: '#a855f7', done: false, next: false },
+            { label: 'Deliver Audit', sub: '$1,500', color: '#f59e0b', done: false, next: false },
+            { label: 'Build', sub: '$3k–$5k', color: '#10b981', done: false, next: false },
+            { label: 'Retainer', sub: '$1,500/mo', color: '#22c55e', done: false, next: false },
+          ].map((node, i, arr) => (
+            <div key={node.label} className="flex items-center gap-3 shrink-0">
+              <div className={`flex flex-col items-center gap-1.5 px-5 py-3 rounded-xl border ${node.next ? 'ring-2 ring-offset-2 ring-[#f97316]' : ''}`}
+                style={{
+                  background: node.done ? 'rgba(34,197,94,0.08)' : node.next ? 'rgba(249,115,22,0.10)' : 'var(--bg-secondary)',
+                  borderColor: node.done ? 'rgba(34,197,94,0.3)' : node.next ? 'rgba(249,115,22,0.5)' : 'var(--border)',
+                  minWidth: 110,
+                }}>
+                <div className="w-2.5 h-2.5 rounded-full"
+                  style={{ background: node.done ? '#22c55e' : node.next ? '#f97316' : node.color, boxShadow: node.next ? '0 0 10px rgba(249,115,22,0.9)' : 'none' }} />
+                <div className="text-xs font-bold text-center" style={{ color: node.done ? '#22c55e' : node.next ? '#f97316' : 'var(--text-primary)' }}>
+                  {node.label}
+                </div>
+                <div className="text-[9px] text-center text-[var(--text-muted)]">{node.sub}</div>
+                {node.next && <div className="text-[8px] font-black uppercase tracking-widest mt-0.5" style={{ color: '#f97316' }}>▶ NEXT</div>}
+              </div>
+              {i < arr.length - 1 && <div className="text-[var(--text-muted)] shrink-0 text-lg">→</div>}
+            </div>
+          ))}
+        </div>
+        <div className="mt-3 p-3 rounded-lg text-xs"
+          style={{ background: 'rgba(249,115,22,0.06)', border: '1px solid rgba(249,115,22,0.15)', color: 'var(--text-muted)' }}>
+          <span style={{ color: '#f97316' }}>Bottleneck:</span> WARM UP — outreach is paused. Fix: review 5 HOT leads in dashboard and send first email. Lead magnet then kicks traffic into the top of this funnel.
+        </div>
+      </div>
+
+      {/* ── CORE SYSTEMS ── */}
+      <div className="card p-5">
+        <div className="flex items-center justify-between mb-4">
+          <div className="section-title">Core Systems</div>
+          <Link href="/infrastructure" className="text-xs text-[var(--accent-blue)] hover:underline">Manage infra →</Link>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+          {[
+            { name: 'Supabase', type: 'Database', status: 'Live', purpose: 'CRM + leads' },
+            { name: 'Vercel', type: 'Hosting', status: 'Live', purpose: 'Ops Hub' },
+            { name: 'Gmail SMTP', type: 'Email', status: 'Live', purpose: 'dawnlabsai@gmail.com' },
+            { name: 'CAL.com', type: 'Scheduling', status: 'Live', purpose: 'jake-emvy/15-min-ai-chat' },
+            { name: 'VAPI', type: 'Voice AI', status: 'Live', purpose: 'Callie AI agent' },
+            { name: 'NVIDIA API', type: 'AI/ML', status: 'Live', purpose: 'LLM inference' },
+            { name: 'X API', type: 'Social', status: 'Live', purpose: 'Posting + monitoring' },
+            { name: 'Tailscale', type: 'VPN', status: 'Live', purpose: 'VPS ↔ Mac file delivery' },
+          ].map(sys => (
+            <div key={sys.name} className="flex items-start justify-between p-3 rounded-lg"
+              style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)' }}>
+              <div>
+                <p className="text-sm font-semibold text-[var(--text-primary)]">{sys.name}</p>
+                <p className="text-xs text-[var(--text-muted)]">{sys.type}</p>
+                <p className="text-[10px] text-[var(--text-muted)] mt-0.5">{sys.purpose}</p>
+              </div>
+              <span className="shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                style={{ background: 'rgba(16,185,129,0.10)', color: '#10b981' }}>
+                {sys.status}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
 
     </div>
