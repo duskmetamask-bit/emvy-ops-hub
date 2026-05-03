@@ -40,6 +40,28 @@ export async function GET() {
       return hasEmail && (l.temp === 'HOT' || l.temp === 'WARM');
     });
 
+    const stageOrder = ['DISCOVERED', 'ENRICHED', 'SENT', 'REPLY', 'CALL', 'AUDIT', 'BUILD', 'DONE'];
+    const byStage: Record<string, any[]> = {};
+    for (const s of stageOrder) byStage[s] = [];
+    for (const lead of typedLeads) {
+      const s = lead.stage || 'DISCOVERED';
+      if (!byStage[s]) byStage[s] = [];
+      byStage[s].push({
+        id: lead.id,
+        name: lead.name || lead.company || '?',
+        company: lead.company || lead.name || '?',
+        industry: lead.industry || '?',
+        location: lead.location || lead.suburb || '?',
+        email: lead.email || '',
+        phone: lead.phone || '',
+        website: lead.website || '',
+        score: lead.score || 0,
+        classification: lead.temp || '?',
+        stage: s,
+        pain_evidence: lead.pain_evidence || lead.notes || '',
+      });
+    }
+
     return NextResponse.json({
       stats: {
         total: typedLeads.length,
@@ -48,6 +70,7 @@ export async function GET() {
         actionable: actionable.length,
         byIndustry,
       },
+      leads: byStage,
       topLeads: actionable
         .sort((a, b) => (b.score || 0) - (a.score || 0))
         .slice(0, 10)
@@ -64,8 +87,6 @@ export async function GET() {
           stage: l.stage || 'DISCOVERED',
           pain_evidence: l.pain_evidence || l.notes || '',
         })),
-      hot,
-      warm,
     });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
