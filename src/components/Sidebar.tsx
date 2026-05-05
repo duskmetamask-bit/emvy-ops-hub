@@ -21,6 +21,7 @@ const BUSINESS = [
 ];
 
 const TOOLS: Array<{ href: string; label: string; accent: string; icon: string; highlight?: boolean }> = [
+  { href: '/reports',       label: 'Reports',        accent: '#8b5cf6', icon: '◫' },
   { href: '/content',        label: 'Content',        accent: '#ec4899', icon: '▥', highlight: true },
   { href: '/actions',       label: 'Actions',        accent: '#22c55e', icon: '▦' },
   { href: '/apis',          label: 'APIs',           accent: '#71717a', icon: '▧' },
