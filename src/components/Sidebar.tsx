@@ -9,6 +9,7 @@ const OVERVIEW = [
 
 const PROCESS_FLOW = [
   { href: '/leads',     label: 'Leads',     accent: '#3b82f6', icon: '◈' },
+  { href: '/kanban',    label: 'Kanban',    accent: '#a855f7', icon: '◫' },
   { href: '/discovery', label: 'Discovery',  accent: '#f97316', icon: '◉' },
   { href: '/audit',     label: 'Audit',      accent: '#f59e0b', icon: '◎' },
   { href: '/build',     label: 'Build',      accent: '#10b981', icon: '◆' },
